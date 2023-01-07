@@ -20,13 +20,13 @@ class MyCardReader(object):
     def read_id(self):
         try:
         
-                print('ここでエラー')
+                print('start')
                 clf = nfc.ContactlessFrontend('usb')
-                print('エラー乗り越え')
                 try:
                     clf.connect(rdwr={'on-connect': self.on_connect})
                 finally:
                     clf.close()
+                    print('end')
         except timeout_decorator.timeout_decorator.TimeoutError:
                 clf.close()
                 
