@@ -36,3 +36,7 @@ class MyCardReader(object):
         self.read_id()
         return self.idm_data
 
+'''
+mycard = MyCardReader()
+mycard.card_data()
+'''

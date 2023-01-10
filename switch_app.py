@@ -66,7 +66,7 @@ def form_view():
 		FROM
 		resident
 		WHERE 
-		going_out_alone = '一人外出可能' OR going_out_alone = '一人外出可能(一部)'
+		going_to_alone = '一人外出可能' OR going_to_alone = '一人外出可能(一部)'
 		""")
     residents = cursor.fetchall()
     

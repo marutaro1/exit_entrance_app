@@ -35,9 +35,11 @@ connection = MySQLdb.connect(
 cursor = connection.cursor()
 
 def notification(day,time,name,nb):
+    print('slak app')
     url = "https://slack.com/api/chat.postMessage"
     data = {
-    "token":"xoxb-4610993849044-4611014137156-y7RlLi6fnmS4wYrda8MuUKRi",
+    #"token":"xoxb-4610993849044-4611014137156-y7RlLi6fnmS4wYrda8MuUKRi",
+    "token":"xoxb-4610993849044-4611014137156-mBqP1WPlkX5xrqUXUsO1GzYg",
     "channel":"exitresident",
     "text":"%s %s %s様: 外出%s" % (day,time,name,nb)
     }
@@ -64,10 +66,14 @@ def mb():
 				    lag = datetime.timedelta(hours=0,minutes=0,seconds=40)
 				    clf.connect(rdwr={'on-connect': cr.on_connect})
 				    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
+				    print('koko')
+				    print(resident[4])
 				    if resident[4] == '一人外出可能(一部)':
-				            notification(day,tim,resident[1],'(テラスまで)')
+					    print('koko1')
+					    notification(day,tim,resident[1],'(テラスまで)')
 				    elif resident[4] == '一人外出可能':
-				            notification(day,tim,resident[1],'')
+					    print('koko2')
+					    notification(day,tim,resident[1],'')
 				    cursor.execute(f"insert into door_record (resident_id,exit_day,exit_time,nb) values (%s,%s,%s,%s)",(resident[0],day,tim,resident[4]))
 				    #保存
 				    connection.commit()
