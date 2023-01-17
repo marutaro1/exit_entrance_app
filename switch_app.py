@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template
+from flask_paginate import Pagination, get_page_parameter
 
 import datetime
 
@@ -10,7 +11,6 @@ import nfc_reader
 
 
 app = Flask(__name__)
-
 
 
 headers = {
@@ -34,10 +34,7 @@ connection = MySQLdb.connect(
 )
 cursor = connection.cursor()
 
-@app.route('/')    
-def return_view():
-    now = datetime.datetime.now()
-    day = str(now)[0:11]
+def today_value(day):
     cursor.execute("""SELECT
 		    resident.name,
 		    exit_day,
@@ -56,8 +53,21 @@ def return_view():
 		    )
     today = cursor.fetchall()
     connection.commit()
-    return render_template('index.html', today=today)
+    return today
 
+@app.route('/')
+def return_view():
+    now = datetime.datetime.now()
+    day = str(now)[0:11]
+    today =  today_value(day)
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    limit = today[(page -1)*10:page*10]
+    pagination = Pagination(page=page, total=len(today))
+    return render_template('index.html', today=limit, pagination=pagination)
+
+@app.route('/<page>'  , methods=['GET','POST'])
+def show_page(page):
+    return 'page %s' % page 
 
 @app.route('/form', methods=['GET','POST'])    
 def form_view():
@@ -98,7 +108,7 @@ def form_view():
 			    """ % (request.form['resident_id'][:-6],date,tim)
 			    )
 			    return_door = cursor.fetchone()
-		    return_door = cursor.fetchone()
+		    print(return_door)
 		    if return_door == None:
 			    if request.form['resident_id'][-10:] == '一人外出可能(一部)':
 				    cursor.execute("""INSERT INTO door_record(resident_id,entrance_day,entrance_time,nb)

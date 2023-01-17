@@ -35,11 +35,10 @@ connection = MySQLdb.connect(
 cursor = connection.cursor()
 
 def notification(day,time,name,nb):
-    print('slak app')
+    print('slak')
     url = "https://slack.com/api/chat.postMessage"
     data = {
-    #"token":"xoxb-4610993849044-4611014137156-y7RlLi6fnmS4wYrda8MuUKRi",
-    "token":"xoxb-4610993849044-4611014137156-mBqP1WPlkX5xrqUXUsO1GzYg",
+    "token":"xoxb-4610993849044-4611014137156-F9GaRhywRFZsFxy8MwSpzXci",
     "channel":"exitresident",
     "text":"%s %s %s様: 外出%s" % (day,time,name,nb)
     }
@@ -66,7 +65,6 @@ def mb():
 				    lag = datetime.timedelta(hours=0,minutes=0,seconds=40)
 				    clf.connect(rdwr={'on-connect': cr.on_connect})
 				    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
-				    print('koko')
 				    print(resident[4])
 				    if resident[4] == '一人外出可能(一部)':
 					    print('koko1')
@@ -95,7 +93,6 @@ def mb():
 				    exit_day = %s and resident_id = %s ORDER BY exit_time DESC""" % ("'" + day + "'",resident[0])
 				    )
 				day_record = cursor.fetchone()
-				
 				if day_record is None or day_record[4] is not None:
 					with nfc.ContactlessFrontend('usb') as clf:
 						now = datetime.datetime.now()
@@ -117,7 +114,7 @@ def mb():
 						tim = str(now)[11:19]
 						clf.connect(rdwr={'on-connect': cr.on_connect})
 						response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
-						cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb=%s where exit_day = %s and exit_time <= %s and resident_id = %s",(day,tim,resident[4],day,tim,resident[0]))
+						cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb=%s where exit_day = %s and exit_time <= %s and resident_id = %s order by exit_time desc limit 1",(day,tim,resident[4],day,tim,resident[0]))
 						#保存
 						connection.commit()
 					
