@@ -9,15 +9,20 @@
       <option value="go">出発</option>
       <option value="return">帰館</option>
     </select>
+    
     <input type="text" name="door_date" value="{{local_date}}">
+    
     <input type="time" name="door_time" value="{{local_tim}}">
+    
     <select name="resident_id" placeholder="名前">
       <option>選択してください</option>
       {% for resident in residents %}
         <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
       {% endfor %}
     </select>
+
     <input type="submit" value="送信">
+    
   </form>
  
 	{% block content %}
