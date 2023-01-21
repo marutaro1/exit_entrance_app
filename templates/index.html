@@ -2,10 +2,20 @@
 <html>
 <head>
   <title>扉開閉スイッチ</title>
-  <meta http-equiv="refresh" content="5">
+
 </head>
 <body>
-
+<form method="POST">
+    <input type="date" id="today" name="day_value">
+    
+    <select name="resident_id" placeholder="名前">
+      <option value=-1>選択してください</option>
+      {% for resident in residents %}
+        <option value="{{ resident[0] }}">{{ resident[1] }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" value="送信">
+  </form>
 	{% block content %}
     {% for day_record in today %}
         <p>{{ day_record[0] }} 外出時間:{{ day_record[1] }} {{ day_record[2] }}</p>
@@ -18,4 +28,14 @@
   {% endblock %} 
 
 </body>
+<script type="text/javascript">
+  window.onload = function () {
+    var today = new Date();
+    today.setDate(today.getDate());
+    var yyyy = today.getFullYear();
+    var mm = ("0" + (today.getMonth() + 1)).slice(-2);
+    var dd = ("0" + today.getDate()).slice(-2);
+    document.getElementById("today").value = yyyy + '-' + mm + '-' + dd;
+  }
+</script>
 </html>

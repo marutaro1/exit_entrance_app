@@ -34,6 +34,27 @@ connection = MySQLdb.connect(
 )
 cursor = connection.cursor()
 
+def select_day(num=0):
+    now = datetime.datetime.now()
+    day_value = now + datetime.timedelta(days=num)
+    return str(day_value)[0:11]
+    
+def residents_value():
+    try:
+	    cursor.execute("""SELECT
+			*
+			FROM
+			resident
+			WHERE 
+			going_to_alone = '一人外出可能' OR going_to_alone = '一人外出可能(一部)'
+			""")
+	    residents = cursor.fetchall()
+	    connection.commit()
+    except MySQLdb.OperationalError:
+	    #接続を閉じる
+	    connection.close()
+    return residents
+    
 def today_value(day):
     try:
 	    cursor.execute("""SELECT
@@ -58,23 +79,51 @@ def today_value(day):
 	    connection.close()
     return today
 
-
-def residents_value():
+def serch_today_value(day,resident_id):
     try:
+	    select_value = 1
+	    if int(resident_id) == -1:
+		    select_value = 1
+	    else:
+		    select_value = 0
+	    print(resident_id)
+	    print(select_value)
 	    cursor.execute("""SELECT
-			*
-			FROM
-			resident
-			WHERE 
-			going_to_alone = '一人外出可能' OR going_to_alone = '一人外出可能(一部)'
-			""")
-	    residents = cursor.fetchall()
-	    connection.commit()
+			    resident.name,
+			    exit_day,
+			    exit_time,
+			    entrance_day,
+			    entrance_time,
+			    nb
+			    FROM
+			    door_record
+			    INNER JOIN
+			    resident
+			    ON
+			    door_record.resident_id = resident.id
+			    WHERE
+			    exit_day = %s
+			    AND
+			    CASE 
+			    WHEN resident_id = %s THEN TRUE ELSE %s END
+			    OR
+			    exit_day is Null
+			    AND
+			    entrance_day = %s
+			    AND
+			    CASE 
+			    WHEN resident_id = %s THEN TRUE ELSE %s END
+			    ORDER BY exit_time DESC
+			    """
+			    % ("'" + day + "'",resident_id,select_value,
+			    "'" + day + "'",resident_id,select_value)
+			    )
+	    today = cursor.fetchall()
     except MySQLdb.OperationalError:
 	    #接続を閉じる
 	    connection.close()
-    return residents
-    
+    return today
+
 def post_door_record(identify_day,identify_time,resident_id,day,time,nb):
     try:
 	     cursor.execute("""
@@ -117,16 +166,30 @@ def return_door_record(resident_id,day,time):
 	    connection.close()
     return cursor.fetchone()
 
-@app.route('/')
-def return_view():
+@app.route('/', methods=['GET','POST'])
+def return_view(post_day=''):
     now = datetime.datetime.now()
     day = str(now)[0:11]
-    today =  today_value(day)
+    time = str(now)[11:19]
+    today = serch_today_value(day,-1)
+    if request.method == 'POST':
+	    if request.form['day_value'] is None:
+		    today = serch_today_value(day,request.form['resident_id'])
+	    elif request.form['day_value'] is not None:
+		    today = serch_today_value(request.form['day_value'],request.form['resident_id'])
+    residents = residents_value()
     page = request.args.get(get_page_parameter(), type=int, default=1)
     limit = today[(page -1)*10:page*10]
     pagination = Pagination(page=page, total=len(today))
-    return render_template('index.html', today=limit, pagination=pagination)
+    connection.commit()
+    return render_template('index.html', residents=residents, today=limit, time=time, pagination=pagination)
 
+@app.route('/', methods=['POST'])
+def post_select_day():
+	if request.method == 'POST':
+		if request.form['day_value']:
+			door_record = door_record_value("'" + request.form['day_value'] + "'")
+			return door_record
 
 @app.route('/form', methods=['GET','POST'])    
 def form_view():
@@ -164,12 +227,16 @@ def form_view():
 		    
 	    today = today_value(local_date)
 	    residents = residents_value()
+	    
+	    page = request.args.get(get_page_parameter(), type=int, default=1)
+	    limit = today[(page -1)*10:page*10]
+	    pagination = Pagination(page=page, total=len(today))
 	    connection.commit()
     
     except MySQLdb.OperationalError:
 		    #接続を閉じる
 		    connection.close()
-    return render_template('form.html',residents=residents,today=today,local_date=local_date,local_tim=local_tim)
+    return render_template('form.html',residents=residents,today=limit,local_date=local_date,local_tim=local_tim,pagination=pagination)
 	  
 
 if __name__ == "__main__":
