@@ -38,7 +38,7 @@ def notification(day,time,name,nb):
     print('slak')
     url = "https://slack.com/api/chat.postMessage"
     data = {
-    "token":"xoxb-4610993849044-4611014137156-r5y0zrO2KcTr8M8S08wGAT7P",
+    "token":"Slack Token",
     "channel":"exitresident",
     "text":"%s %s %s様: 外出%s" % (day,time,name,nb)
     }

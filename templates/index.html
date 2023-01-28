@@ -6,16 +6,20 @@
 </head>
 <body>
 <form method="POST">
-    <input type="date" id="today" name="day_value">
-    <select name="resident_id" placeholder="名前">
+
+    <input type="date" id="flask_day" name="day_value">
+    <select name="resident_id" id="resident_id" placeholder="名前">
       <option value=-1>選択してください</option>
       {% for resident in residents %}
         <option value="{{ resident[0] }}">{{ resident[1] }}</option>
       {% endfor %}
     </select>
-    <input type="submit" value="検索">
+    <p onClick="test()">検索</p>
+    <input type="submit">
   </form>
 	{% block content %}
+  <div>表示日付:{{day_value}}</div>
+  <div> 表示入居者名:{{resident_id}}</div>
     {% for day_record in today %}
         <p>{{ day_record[0] }} 外出時間:{{ day_record[1] }} {{ day_record[2] }}</p>
         <p>帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
@@ -23,18 +27,31 @@
         
         <hr>
     {% endfor %}
-    {{ pagination.links }}
+    <div id='page_btn'>{{ pagination.links }}</div>
   {% endblock %} 
 
 </body>
-<script type="text/javascript">
-  window.onload = function () {
+<script>
+    var flask_day = new Date({{day_value|tojson}});
     var today = new Date();
-    today.setDate(today.getDate());
-    var yyyy = today.getFullYear();
-    var mm = ("0" + (today.getMonth() + 1)).slice(-2);
-    var dd = ("0" + today.getDate()).slice(-2);
-    document.getElementById("today").value = yyyy + '-' + mm + '-' + dd;
-  }
+    function make_day(day) {
+      day.setDate(day.getDate());
+      var yyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
+      return yyyy + '-' + mm + '-' + dd;
+    }
+    flask_day = make_day(flask_day)
+    document.getElementById('page_btn').addEventListener('click',function(){
+      sessionStorage.setItem('select_day',flask_day);
+    },false);
+    document.getElementById('flask_day').value = sessionStorage.getItem('select_day');
+    function test() {
+      window.location.href = 'http://localhost:8000/' + document.getElementById('flask_day').value
+    }
+    document.getElementById('flask_day').value = sessionStorage.getItem('select_day');
+    if(sessionStorage.getItem('select_day') === "NaN-aN-aN") {
+      document.getElementById('flask_day').value = make_day(today)
+    }
 </script>
 </html>
