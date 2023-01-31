@@ -1,4 +1,6 @@
+import os
 from flask import Flask, request, render_template
+from dotenv import load_dotenv
 import datetime
 import MySQLdb
 import nfc
@@ -11,6 +13,8 @@ import switch_app
 
 
 app = Flask(__name__)
+
+load_dotenv()
 
 start_time = datetime.datetime.now()
 headers = {
@@ -27,9 +31,9 @@ json_data = {
 #db接続
 connection = MySQLdb.connect(
 	host='localhost',
-	user='root',
-	password='password',
-	db='entrance_exit_management',
+	user=os.environ['DB_USER'],
+	password=os.environ['DB_PASS'],
+	db=os.environ['DB_NAME'],
 	charset='utf8'
 	)
 cursor = connection.cursor()
@@ -38,7 +42,7 @@ def notification(day,time,name,nb):
     print('slak')
     url = "https://slack.com/api/chat.postMessage"
     data = {
-    "token":"Slack Token",
+    "token":os.environ['SLACK_TOKEN'],
     "channel":"exitresident",
     "text":"%s %s %s様: 外出%s" % (day,time,name,nb)
     }

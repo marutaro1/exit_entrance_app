@@ -1,6 +1,7 @@
+import os
 from flask import Flask, request, render_template
 from flask_paginate import Pagination, get_page_parameter
-
+from dotenv import load_dotenv
 import datetime
 
 import nfc
@@ -12,6 +13,7 @@ import nfc_reader
 
 app = Flask(__name__)
 
+load_dotenv()
 
 headers = {
     'Authorization': '42b8a2cbc94cd3a845eafffce207a3db789ff1bc1fa92d428a6c2e921bf3fa69428fb37b200195e58c4fbaa9dbf454fa',
@@ -27,12 +29,13 @@ json_data = {
 #db接続
 connection = MySQLdb.connect(
 	host='localhost',
-	user='root',
-	password='password',
-	db='entrance_exit_management',
+	user=os.environ['DB_USER'],
+	password=os.environ['DB_PASS'],
+	db=os.environ['DB_NAME'],
 	charset='utf8',
 )
 cursor = connection.cursor()
+
 
 def select_day(num=0):
     now = datetime.datetime.now()
