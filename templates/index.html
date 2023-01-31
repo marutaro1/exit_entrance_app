@@ -5,21 +5,41 @@
 
 </head>
 <body>
-<form method="POST">
 
-    <input type="date" id="flask_day" name="day_value">
-    <select name="resident_id" id="resident_id" placeholder="名前">
-      <option value=-1>選択してください</option>
+
+  <input type="date" id="flask_day">
+  <select name="resident_id" id="resident_id" placeholder="名前">
+    <option value=-1>選択してください</option>
+    {% for resident in residents %}
+      <option value="{{ resident[0] }}">{{ resident[1] }}</option>
+    {% endfor %}
+  </select>
+   <select id="return_check">
+      <option value="all_record">選択してください</option>
+      <option value="return">帰館</option>
+      <option value="no_return">未帰館</option>
+    </select>
+  <p onClick="test()">検索</p>
+  
+  <form method="POST">
+    <select name="go_out">
+      <option value="go">出発</option>
+      <option value="return">帰館</option>
+    </select>
+    <input type="date" id="today" name="door_date">
+    <input type="time" name="door_time" value="{{local_time}}">
+    <select name="select_resident_id" placeholder="名前">
+      <option>選択してください</option>
       {% for resident in residents %}
-        <option value="{{ resident[0] }}">{{ resident[1] }}</option>
+        <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
       {% endfor %}
     </select>
-    <p onClick="test()">検索</p>
-    <input type="submit">
+
+    <input type="submit" value="送信">
+    
   </form>
+
 	{% block content %}
-  <div>表示日付:{{day_value}}</div>
-  <div> 表示入居者名:{{resident_id}}</div>
     {% for day_record in today %}
         <p>{{ day_record[0] }} 外出時間:{{ day_record[1] }} {{ day_record[2] }}</p>
         <p>帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
@@ -27,7 +47,7 @@
         
         <hr>
     {% endfor %}
-    <div id='page_btn'>{{ pagination.links }}</div>
+    {{ pagination.links }}
   {% endblock %} 
 
 </body>
@@ -42,16 +62,19 @@
       return yyyy + '-' + mm + '-' + dd;
     }
     flask_day = make_day(flask_day)
-    document.getElementById('page_btn').addEventListener('click',function(){
-      sessionStorage.setItem('select_day',flask_day);
-    },false);
-    document.getElementById('flask_day').value = sessionStorage.getItem('select_day');
-    function test() {
-      window.location.href = 'http://localhost:8000/' + document.getElementById('flask_day').value
-    }
-    document.getElementById('flask_day').value = sessionStorage.getItem('select_day');
-    if(sessionStorage.getItem('select_day') === "NaN-aN-aN") {
+
+    document.getElementById('flask_day').value = {{page_value|tojson}};
+    document.getElementById('today').value = {{page_value|tojson}}
+    document.getElementById('resident_id').value = {{resident_data|tojson}}
+    document.getElementById('return_check').value = {{return_check|tojson}}
+    console.log(document.getElementById('flask_day').value)
+    if(!document.getElementById('flask_day').value) {
       document.getElementById('flask_day').value = make_day(today)
     }
+    function test() {
+      window.location.href = 'http://localhost:8000/' + document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
+    }
+    
+    
 </script>
 </html>

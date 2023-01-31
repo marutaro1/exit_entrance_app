@@ -97,7 +97,8 @@ def mb():
 				    connection.commit()
 				    
 			if page_value == 'return':
-				serect_door_record("'" + day + "'",resident[0])
+				day_record = serect_door_record("'" + day + "'",resident[0])
+				print(day_record)
 				if day_record is None or day_record[4] is not None:
 					with nfc.ContactlessFrontend('usb') as clf:
 						switch_response(cr,clf,'new_return',resident)

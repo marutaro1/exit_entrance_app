@@ -10,12 +10,12 @@
       <option value="return">帰館</option>
     </select>
     
-    <input type="date" id="today" name="door_date">
+    <input type="date" id="today" name="door_date" required>
     
-    <input type="time" name="door_time" value="{{local_time}}">
+    <input type="time" name="door_time" value="{{local_time}}" required>
     
-    <select name="resident_id" placeholder="名前">
-      <option>選択してください</option>
+    <select name="resident_id" required>
+      <option value="">選択してください</option>
       {% for resident in residents %}
         <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
       {% endfor %}
