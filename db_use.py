@@ -40,8 +40,8 @@ cursor = connection.cursor()
 
 class SwitchDB(object):
 	def __init__(self):
-		self.page_value = input('Page go or return:')
-	
+		#self.page_value = input('go or return')
+		self.page_value = 'go'
 
 	def notification(day,time,name,nb):
 	    print('slak')
