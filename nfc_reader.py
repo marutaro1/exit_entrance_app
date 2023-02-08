@@ -35,8 +35,3 @@ class MyCardReader(object):
         #タッチ待ち
         self.read_id()
         return self.idm_data
-
-'''
-mycard = MyCardReader()
-mycard.card_data()
-'''

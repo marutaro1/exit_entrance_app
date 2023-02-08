@@ -40,9 +40,9 @@ cursor = connection.cursor()
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
 	{'trigger':'go','source':'go', 'dest':'go_record'},#goの信号を受け取る
-	{'trigger':'go_record','source':'go_record', 'dest':'post_go_record','after':'insert_door'},#受け取った信号をpostする
-	{'trigger':'return','source':'return', 'dest':'return_record'},#goの信号を受け取る
-	{'trigger':'return_record','source':'return_record', 'dest':'post_return_record','after':'insert_door'},#outの信号を受け取り、updateかpostかを識別する
+	{'trigger':'go_record','source':'go_record', 'dest':'post_go_record','after':'insert_door'},#受け取った信号を登録する
+	{'trigger':'return','source':'return', 'dest':'return_record'},#returnの信号を受け取る
+	{'trigger':'return_record','source':'return_record', 'dest':'post_return_record','after':'insert_door'},#returnの信号を受け取り、updateかpostかを識別し登録する
 	]
 
 
@@ -50,12 +50,8 @@ class SwitchView(object):
 	def __init__(self):
 	    self.select_state = ''
 	    self.return_post_method = ''
-
-	def select_day(num=0):
-	    now = datetime.datetime.now()
-	    day_value = now + datetime.timedelta(days=num)
-	    return str(day_value)[0:11]
 	
+	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
 	    resident_value = []
 	    if resident.endswith('(一部)'):
@@ -64,6 +60,7 @@ class SwitchView(object):
 		    resident_value = [resident[:-6],resident[-6:]]
 	    return resident_value
 	    
+	#residentから一人外出可能な人だけを取り出す
 	def residents_value():
 	    cursor.execute("""SELECT
 			*
@@ -74,7 +71,8 @@ class SwitchView(object):
 			""")
 	    residents = cursor.fetchall()
 	    return residents
-	    
+	
+	#日付を選択し、その日の記録を取り出す
 	def today_value(day):
 	    cursor.execute("""SELECT
 			    resident.name,
@@ -95,12 +93,11 @@ class SwitchView(object):
 	    today = cursor.fetchall()
 	    
 	    return today
-
+	
+	#すべてのdoor_recordか、entrance_dayにデータが入っている物のみか、entrance_dayがNullの物かを選択し、呼び出す
 	def serch_today_value(day,resident_id,return_check):
 	    select_value = 1
-	    if int(resident_id) == -1:
-		    select_value = 1
-	    elif int(resident_id) != -1:
+	    if int(resident_id) != -1:
 		    select_value = 0
 	    if return_check == 'all_record':
 		    cursor.execute("""SELECT
@@ -185,6 +182,7 @@ class SwitchView(object):
 	    today = cursor.fetchall()
 	    return today
 
+	#exitかentranceか選択し、新たにdoor_recordを登録する
 	def post_door_record(identify_day,identify_time,resident_id,day,time,nb):
 	     cursor.execute("""
 		 INSERT INTO door_record(resident_id,%s,%s,nb)
@@ -192,8 +190,8 @@ class SwitchView(object):
 		 """ % (identify_day,identify_time,resident_id,"'" + day + "'","'" + time + "'","'" + nb + "'")
 	     )
 
+	#resident_idを選択し、entranceがNullの状態の最新のdoor_recordに、選択した日時をentranceのday,timeとして登録
 	def update_door_record(day,time,resident_id):
-
 	    cursor.execute("""
 		UPDATE door_record
 		SET entrance_day = %s, entrance_time = %s
@@ -201,12 +199,14 @@ class SwitchView(object):
 		""" % ("'" + day + "'","'" + time + "'","'" + time + "'",resident_id)
 	    )
 	    connection.commit()
-
+	
+	#選択した日付と一致するexit_dayを持つdoor_recordを呼び出す
 	def door_record_value(day):
 	    cursor.execute("SELECT * FROM door_record WHERE exit_day = %s ORDER BY exit_time DESC" % ("'" + day + "'"))
 	    door_record = cursor.fetchone()
 	    return door_record
 
+	#resident_idとexitかentranceの日付に一致したdoor_recordを呼び出す
 	def return_door_record(resident_id,day,time):
 	    cursor.execute("""
 		SELECT * FROM door_record 
@@ -216,6 +216,7 @@ class SwitchView(object):
 	    door_record = cursor.fetchone()
 	    return door_record
 	
+	#goかreturnかの信号を受け取り、door_recordを登録する
 	def insert_door(event):
 	    request = event.kwargs.get('data')
 	    page_value = event.kwargs.get('page')
@@ -233,7 +234,9 @@ class SwitchView(object):
 		    elif return_value == None:
 			    SwitchView.post_door_record(day,time,resident_nb[0],page_value,door_time,resident_nb[1])
 		    return
+	    print(resident_nb)
 	    SwitchView.post_door_record(day,time,resident_nb[0],page_value,door_time,resident_nb[1])
+	    
 	
 	@app.route('/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
 	def return_view(page_value,resident_id,return_check):
@@ -252,10 +255,11 @@ class SwitchView(object):
 		    
 		    if request.method == 'POST':
 			    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
-			    if str(request.form['door_time']) != str(door_record[3]):
+			    if door_record is None or str(request.form['door_time']) != str(door_record[3]):
 				    SwitchView.select_state = request.form.get('go_out')
 				    machine = Machine(model=SwitchView, states=states, transitions=transitions, initial=SwitchView.select_state,
 				    auto_transitions=False, ordered_transitions=False,send_event=True)
+				    print(request.form['select_resident_id'])
 				    SwitchView.trigger(SwitchView.select_state)
 				    SwitchView.trigger(SwitchView.state,data=SwitchView.select_state,page=page_value,door_time=request.form['door_time'],resident_nb=request.form['select_resident_id'])
 			    resident_nb = SwitchView.select_resident_nb_value(request.form['select_resident_id'])
