@@ -9,6 +9,7 @@ import requests
 import MySQLdb
 import schedule
 import nfc_reader
+from transitions import Machine
 
 
 app = Flask(__name__)
@@ -36,12 +37,32 @@ connection = MySQLdb.connect(
 )
 cursor = connection.cursor()
 
+states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
+transitions = [
+	{'trigger':'go','source':'go', 'dest':'go_record'},#goの信号を受け取る
+	{'trigger':'go_record','source':'go_record', 'dest':'post_go_record','after':'insert_door'},#受け取った信号をpostする
+	{'trigger':'return','source':'return', 'dest':'return_record'},#goの信号を受け取る
+	{'trigger':'return_record','source':'return_record', 'dest':'post_return_record','after':'insert_door'},#outの信号を受け取り、updateかpostかを識別する
+	]
+
+
 class SwitchView(object):
+	def __init__(self):
+	    self.select_state = ''
+	    self.return_post_method = ''
 
 	def select_day(num=0):
 	    now = datetime.datetime.now()
 	    day_value = now + datetime.timedelta(days=num)
 	    return str(day_value)[0:11]
+	
+	def select_resident_nb_value(resident):
+	    resident_value = []
+	    if resident.endswith('(一部)'):
+		    resiedent_value = [resident[:-8],resident[-8:]]
+	    elif resident.endswith('出可能'):
+		    resident_value = [resident[:-6],resident[-6:]]
+	    return resident_value
 	    
 	def residents_value():
 	    cursor.execute("""SELECT
@@ -194,7 +215,26 @@ class SwitchView(object):
 	    )
 	    door_record = cursor.fetchone()
 	    return door_record
-
+	
+	def insert_door(event):
+	    request = event.kwargs.get('data')
+	    page_value = event.kwargs.get('page')
+	    resident_nb = SwitchView.select_resident_nb_value(event.kwargs.get('resident_nb'))
+	    door_time = event.kwargs.get('door_time')
+	    day = 'exit_day'
+	    time = 'exit_time'
+	    return_value = ''
+	    if request == 'return':
+		    day = 'entrance_day'
+		    time = 'entrance_time'
+		    return_value = SwitchView.return_door_record(resident_nb[0],page_value,door_time)
+		    if return_value != None:
+			    SwitchView.update_door_record(page_value,door_time,resident_nb[0])
+		    elif return_value == None:
+			    SwitchView.post_door_record(day,time,resident_nb[0],page_value,door_time,resident_nb[1])
+		    return
+	    SwitchView.post_door_record(day,time,resident_nb[0],page_value,door_time,resident_nb[1])
+	
 	@app.route('/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
 	def return_view(page_value,resident_id,return_check):
 	    try:
@@ -208,37 +248,18 @@ class SwitchView(object):
 		    pagination = ''
 		    residents = SwitchView.residents_value()
 		    door_record = SwitchView.door_record_value(page_value)
-		    print(door_record)
+		    method_value = request.method
+		    
 		    if request.method == 'POST':
 			    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
-			    if door_record is None:
-				    door_record = ['','','','','','','']
 			    if str(request.form['door_time']) != str(door_record[3]):
-				    if request.form['go_out'] == 'go':
-					    if request.form['select_resident_id'].endswith('(一部)'):
-						    SwitchView.post_door_record('exit_day','exit_time',request.form['select_resident_id'][:-10],page_value,request.form['door_time'],request.form['select_resident_id'][-10:])
-					    elif request.form['select_resident_id'].endswith('可能'):
-						    print(request.form['select_resident_id'][-6:])
-						    SwitchView.post_door_record('exit_day','exit_time',request.form['select_resident_id'][:-6],page_value,request.form['door_time'],request.form['select_resident_id'][-6:])
-				    elif request.form['go_out'] == 'return':
-					    if request.form['select_resident_id'].endswith('(一部)'):
-						    return_door = SwitchView.return_door_record(request.form['select_resident_id'][:-10],page_value,request.form['door_time'])
-					    elif request.form['select_resident_id'].endswith('可能'):
-						    return_door = SwitchView.return_door_record(request.form['select_resident_id'][:-6],page_value,request.form['door_time'])
-					    if return_door == None:
-						    if request.form['select_resident_id'][-10:] == '一人外出可能(一部)':
-							    SwitchView.post_door_record('entrance_day','entrance_time',request.form['select_resident_id'][:-10],page_value,request.form['door_time'],request.form['select_resident_id'][-10:])
-						    elif request.form['select_resident_id'][-6:] == '一人外出可能':
-							    SwitchView.post_door_record('entrance_day','entrance_time',int(request.form['select_resident_id'][:-6]),page_value,request.form['door_time'],request.form['select_resident_id'][-6:])
-					    elif return_door != None:
-						    if request.form['select_resident_id'][-10:] == '一人外出可能(一部)':
-							    SwitchView.update_door_record(page_value,request.form['door_time'],request.form['select_resident_id'][:-10])
-						    elif request.form['select_resident_id'][-6:] == '一人外出可能':
-							    SwitchView.update_door_record(page_value,request.form['door_time'],request.form['select_resident_id'][:-6])
-				    
-			    if request.form['select_resident_id'][-10:] == '一人外出可能(一部)':
-				    today = SwitchView.serch_today_value(page_value,-1,return_check)
-			    elif request.form['select_resident_id'][-6:] == '一人外出可能':
+				    SwitchView.select_state = request.form.get('go_out')
+				    machine = Machine(model=SwitchView, states=states, transitions=transitions, initial=SwitchView.select_state,
+				    auto_transitions=False, ordered_transitions=False,send_event=True)
+				    SwitchView.trigger(SwitchView.select_state)
+				    SwitchView.trigger(SwitchView.state,data=SwitchView.select_state,page=page_value,door_time=request.form['door_time'],resident_nb=request.form['select_resident_id'])
+			    resident_nb = SwitchView.select_resident_nb_value(request.form['select_resident_id'])
+			    if resident_nb != []:
 				    today = SwitchView.serch_today_value(page_value,-1,return_check)
 		    if request.method == 'GET':
 			    if page_value != 'favicon.ico':
@@ -248,11 +269,6 @@ class SwitchView(object):
 		    page = request.args.get(get_page_parameter(), type=int, default=1)
 		    limit = today[(page -1)*10:page*10]
 		    pagination = Pagination(page=page, total=len(today))
-		    if page == '' or limit == '' or pagination == '' or residents == '':
-			    residents = SwitchView.residents_value()
-			    page = request.args.get(get_page_parameter(), type=int, default=1)
-			    limit = today[(page -1)*10:page*10]
-			    pagination = Pagination(page=page, total=len(today))
 		    connection.commit()
 		    
 	    except MySQLdb.ProgrammingError:
@@ -262,8 +278,6 @@ class SwitchView(object):
 		    #接続を閉じる
 		    connection.close()
 	    return render_template('index.html', residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
-
-	  
 
 if __name__ == "__main__":
     app.run(port = 8000, debug=True)
