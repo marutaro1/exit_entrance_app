@@ -53,13 +53,20 @@ class SwitchView(object):
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
+	    print(resident[:-10])
 	    resident_value = []
-	    if resident.endswith('(一部)'):
-		    resiedent_value = [resident[:-8],resident[-8:]]
-	    elif resident.endswith('出可能'):
-		    resident_value = [resident[:-6],resident[-6:]]
+	    while resident_value == []:
+		    
+		    if resident.endswith('出可能'):
+			    resident_value = [resident[:-6],resident[-6:]]
+		    elif resident.endswith(')'):
+			    resident_value = [resident[:-10],resident[-10:]]
+		    if resident_value == []:
+			    print(resident)
+			    print(resident_value)
+			    continue
 	    return resident_value
-	    
+
 	#residentから一人外出可能な人だけを取り出す
 	def residents_value():
 	    cursor.execute("""SELECT
@@ -220,8 +227,11 @@ class SwitchView(object):
 	def insert_door(event):
 	    request = event.kwargs.get('data')
 	    page_value = event.kwargs.get('page')
+	    print(event.kwargs.get('resident_nb'))
+	    print(SwitchView.select_resident_nb_value(event.kwargs.get('resident_nb')))
 	    resident_nb = SwitchView.select_resident_nb_value(event.kwargs.get('resident_nb'))
 	    door_time = event.kwargs.get('door_time')
+	    print(resident_nb)
 	    day = 'exit_day'
 	    time = 'exit_time'
 	    return_value = ''
@@ -252,7 +262,6 @@ class SwitchView(object):
 		    residents = SwitchView.residents_value()
 		    door_record = SwitchView.door_record_value(page_value)
 		    method_value = request.method
-		    
 		    if request.method == 'POST':
 			    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
 			    if door_record is None or str(request.form['door_time']) != str(door_record[3]):
@@ -269,7 +278,7 @@ class SwitchView(object):
 			    if page_value != 'favicon.ico':
 				    day_value = page_value
 				    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
-				    
+		    
 		    page = request.args.get(get_page_parameter(), type=int, default=1)
 		    limit = today[(page -1)*10:page*10]
 		    pagination = Pagination(page=page, total=len(today))

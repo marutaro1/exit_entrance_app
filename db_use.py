@@ -57,7 +57,33 @@ class SwitchDB(object):
 	    "text":"%s %s %s様: 外出%s" % (day,time,name,nb)
 	    }
 	    requests.post(url,data=data)
-	
+	    
+	#idを選択し、card_recordとresidentを合わせて一致する最新のデータを1つ呼び出す
+	def select_card_record(self,day,cr):
+	    cursor.execute("""SELECT
+			     resident.id,
+			     resident.name,
+			     resident.going_to_alone,
+			     card_record.datetime,
+			     card_record.type,
+			     card_record.idm
+			     FROM 
+			     resident 
+			     INNER JOIN 
+			     card_record 
+			     ON
+			     resident.card_id = card_record.idm
+			     WHERE
+			     resident.going_to_alone like '%s'
+			     AND
+			     card_record.datetime like '%s'
+			     AND
+			     card_record.type = '%s'
+			     AND
+			     card_record.idm = '%s'
+			     ORDER BY card_record.datetime DESC
+			     """ % ('一人外出可%',day + '%',self.page_value,str(cr.idm_data)[2:-1]))
+	    return cursor.fetchone()
 	#日付とresident_idが一致するdoor_recordの最新のデータを一つ呼び出す
 	def select_door_record(day,resident_id):
 	    cursor.execute("""SELECT
@@ -96,21 +122,23 @@ class SwitchDB(object):
 	     
 	def mb(self):
 	    try:
+		
 		    cr = nfc_reader.MyCardReader()
 		    print(cr.card_data())
+		    
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
-		    time = str(now)[11:19]
-		    cursor.execute("SELECT * FROM resident WHERE card_id like '%%%s%%'" % (str(cr.idm_data)[11:17]))
-		    resident = cursor.fetchone()
+		    new_record = self.select_card_record(day,cr)
+		    if new_record is None:
+			    print('pass')
+			    return
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
-		    if resident[4] == '一人外出可能' or resident[4] == '一人外出可能(一部)':
-			    with nfc.ContactlessFrontend('usb') as clf:
-				    SwitchDB.trigger(self.page_value)
-				    SwitchDB.trigger(self.state,resident_id=resident[0],resident_nb=resident[4],page_value=self.page_value,day=day,time=time)
-				    SwitchDB.notification(day,time,resident[1],resident[4]) 
-				    connection.commit()
+		    with nfc.ContactlessFrontend('usb') as clf:
+			    SwitchDB.trigger(self.page_value)
+			    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19])
+			    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
+			    connection.commit()
 					    
 	    except MySQLdb.OperationalError:
 		    #接続を閉じる
