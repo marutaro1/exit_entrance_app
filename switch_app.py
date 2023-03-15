@@ -27,15 +27,19 @@ json_data = {
     'commandType': 'command',
     }
 
+
+container_ip = os.environ['CONTAINER_ID']
+
 #db接続
 connection = MySQLdb.connect(
-	host='localhost',
+	host=container_ip,
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
 	charset='utf8',
 )
 cursor = connection.cursor()
+
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [

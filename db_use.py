@@ -8,12 +8,14 @@ import requests
 import nfc_reader
 import schedule
 from transitions import Machine
-
+import csv
 import switch_app
 
 load_dotenv()
 
 start_time = datetime.datetime.now()
+
+
 headers = {
     'Authorization': '42b8a2cbc94cd3a845eafffce207a3db789ff1bc1fa92d428a6c2e921bf3fa69428fb37b200195e58c4fbaa9dbf454fa',
     'Content-Type': 'application/json; charset=utf8',
@@ -24,10 +26,12 @@ json_data = {
     'parameter': 'default',
     'commandType': 'command',
     }
+    
+container_ip = os.environ['CONTAINER_ID']
 
 #db接続
 connection = MySQLdb.connect(
-	host='localhost',
+	host=container_ip,
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
@@ -47,6 +51,8 @@ class SwitchDB(object):
 	def __init__(self):
 	    #self.page_value = input('go or return')
 	    self.page_value = 'go'
+	    self.idm = ''
+	    self.backup = []
 	    
 	#日時、名前、詳細をslackに通知させる
 	def notification(day,time,name,nb):
@@ -121,12 +127,40 @@ class SwitchDB(object):
 	    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb) values (%s,%s,%s,%s)" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb))
 	    connection.commit()
 	     
+	def csv_migrate(self):
+	     cursor.execute("""
+		load data local
+		infile'/home/pi/Desktop/exit_entrance_app/backup_file.csv'
+		into table
+		entrance_exit_management.card_record
+		fields
+		terminated by ','
+	     """)
+	     connection.commit()
+	
+	def del_card_data(self,date):
+	    cursor.execute(f"DELETE FROM card_record WHERE type = '%s' AND datetime = '%s'" % (self.page_value, date))
+	    connection.commit()
+	    
+	def net_error_add_db(self):
+	    cr = nfc_reader.MyCardReader()
+	    cr.card_data()
+	    cursor.execute(f"update card_record set type = '%s' where datetime = '%s' and idm = '%s'" % (('error_time:' + self.page_value), cr.now_format, self.idm))
+	    connection.commit()
+	    self.del_card_data(cr.now_format)
+	    self.del_card_data(cr.now_format)
+	    delete_datetime = datetime.datetime.strptime(cr.now_format,'%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=-1)
+	    self.del_card_data(delete_datetime)
+	    self.del_card_data(cr.now_format)
+	    delete_datetime = datetime.datetime.strptime(cr.now_format,'%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=+1)
+	    self.del_card_data(delete_datetime)
+	    self.del_card_data(cr.now_format)
+	    
 	def mb(self):
 	    try:
-		
 		    cr = nfc_reader.MyCardReader()
 		    print(cr.card_data())
-		    
+		    self.idm = str(cr.idm_data)[2:-1]
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
 		    new_record = self.select_card_record(day,cr)
@@ -134,21 +168,23 @@ class SwitchDB(object):
 		    if new_record is None:
 			    print('pass')
 			    return
+		    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
-		    with nfc.ContactlessFrontend('usb') as clf:
-			    SwitchDB.trigger(self.page_value)
-			    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19])
-			    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
-			    connection.commit()
+		    SwitchDB.trigger(self.page_value)
+		    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19])
+		    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
+		    connection.commit()
 					    
-	    except MySQLdb.OperationalError:
+	    except MySQLdb.OperationalError as e:
+		    print(e)
 		    #接続を閉じる
 		    connection.close()
 
 switch_db = SwitchDB()
-schedule.every(3).seconds.do(switch_db.mb)
-
 while True:
-	schedule.run_pending()
-
+    try:
+	    switch_db.mb()
+    
+    except requests.exceptions.ConnectionError as e:
+	    switch_db.net_error_add_db()
