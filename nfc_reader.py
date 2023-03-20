@@ -27,11 +27,17 @@ class MyCardReader(object):
     def __init__(self):
             self.idm_data = ''
             #self.card_type = input('go or return')
-            self.card_type = 'go'
+            self.card_type = 'return'
             self.now_format = ''
+            self.last_time = datetime.datetime.now()
             
     def on_connect(self, tag):
         now = datetime.datetime.now()
+        elapsed_time = (now - self.last_time).total_seconds()
+        if elapsed_time < 1 and self.idm_data == binascii.hexlify(tag._nfcid):
+            # 1秒以内に同じカードを読み込んでいたら、何もしない
+            return
+       
         self.now_format = str(now)[:-7]
         #タグ情報を全て表示
         #print(tag)

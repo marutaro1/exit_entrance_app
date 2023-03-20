@@ -1,11 +1,13 @@
 import os
 from dotenv import load_dotenv
 import datetime
+import time
 import MySQLdb
 import nfc
 import timeout_decorator
 import requests
 import nfc_reader
+import motor
 import schedule
 from transitions import Machine
 import csv
@@ -14,12 +16,16 @@ import switch_app
 load_dotenv()
 
 start_time = datetime.datetime.now()
+switch_motor = motor.ServoMotor()
+cr = nfc_reader.MyCardReader()
+print(cr.card_type)
 
-
+'''
 headers = {
     'Authorization': '42b8a2cbc94cd3a845eafffce207a3db789ff1bc1fa92d428a6c2e921bf3fa69428fb37b200195e58c4fbaa9dbf454fa',
     'Content-Type': 'application/json; charset=utf8',
     }
+'''
 
 json_data = {
     'command': 'press',
@@ -50,7 +56,7 @@ transitions = [
 class SwitchDB(object):
 	def __init__(self):
 	    #self.page_value = input('go or return')
-	    self.page_value = 'go'
+	    self.page_value = cr.card_type
 	    self.idm = ''
 	    self.backup = []
 	    
@@ -120,10 +126,12 @@ class SwitchDB(object):
 		    door_state = ['entrance_day','entrance_time']
 		    day_record = SwitchDB.select_door_record("'" + day + "'",resident_id)
 		    print(day_record)
-		    if day_record[3] is None:
+		    if day_record is not None and day_record[3] is None:
+			    print('return update')
 			    cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb=%s where exit_day = %s and exit_time <= %s and resident_id = %s order by exit_time desc limit 1",(day,time,resident_nb,day,time,resident_id))
 			    connection.commit()
 			    return
+	    print('puls add')
 	    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb) values (%s,%s,%s,%s)" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb))
 	    connection.commit()
 	     
@@ -143,7 +151,6 @@ class SwitchDB(object):
 	    connection.commit()
 	    
 	def net_error_add_db(self):
-	    cr = nfc_reader.MyCardReader()
 	    cr.card_data()
 	    cursor.execute(f"update card_record set type = '%s' where datetime = '%s' and idm = '%s'" % (('error_time:' + self.page_value), cr.now_format, self.idm))
 	    connection.commit()
@@ -158,7 +165,6 @@ class SwitchDB(object):
 	    
 	def mb(self):
 	    try:
-		    cr = nfc_reader.MyCardReader()
 		    print(cr.card_data())
 		    self.idm = str(cr.idm_data)[2:-1]
 		    now = datetime.datetime.now()
@@ -168,7 +174,10 @@ class SwitchDB(object):
 		    if new_record is None:
 			    print('pass')
 			    return
-		    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
+
+		    switch_motor.move_to_position(30)
+
+		    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
 		    SwitchDB.trigger(self.page_value)
