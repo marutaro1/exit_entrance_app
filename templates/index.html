@@ -2,48 +2,272 @@
 <html>
 <head>
   <title>扉開閉スイッチ</title>
-  
+  <style>
+	.hero {
+	  position: relative;
+	  height: 400px;
+	  background-image: url("background.jpg");
+	  background-size: cover;
+	  background-position: center;
+	}
+
+	.hero-overlay {
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  background-color: rgba(0, 0, 0, 0.5);
+	}
+
+	.hero-text {
+	  position: absolute;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+	  font-size: 48px;
+	  font-weight: bold;
+	  color: #282828;
+	  text-align: center;
+	}
+
+	.search-container {
+	  display: flex;
+	  justify-content: center;
+	  align-items: center;
+	  background-color: #f2f2f2;
+	  padding: 20px;
+	  border-radius: 10px;
+	  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+	}
+
+	.search-container input[type="date"] {
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 15px;
+	  margin-right: 10px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 150px;
+	  outline: none;
+	}
+
+	.search-container input[type="time"] {
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 15px;
+	  margin-right: 10px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 120px;
+	  outline: none;
+	}
+
+	.search-container select[name="go_out"] {
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 15px;
+	  margin-right: 10px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 90px;
+	  outline: none;
+	}
+	.search-container select[name="select_resident_id"] {
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 15px;
+	  margin-right: 10px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 185px;
+	  outline: none;
+	}
+
+	.select-wrapper {
+	  position: relative;
+	  margin-right: 10px;
+	}
+
+	.select-wrapper .select-design {
+	  -webkit-appearance: none;
+	  -moz-appearance: none;
+	  appearance: none;
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 30px 10px 15px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 180px;
+	  outline: none;
+	}
+	.select-wrapper select {
+	  -webkit-appearance: none;
+	  -moz-appearance: none;
+	  appearance: none;
+	  background-color: #fff;
+	  border: none;
+	  padding: 10px 30px 10px 15px;
+	  border-radius: 5px;
+	  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+	  font-size: 16px;
+	  width: 150px;
+	  outline: none;
+	}
+
+	.select-wrapper i {
+	  position: absolute;
+	  top: 50%;
+	  right: 10px;
+	  transform: translateY(-50%);
+	  pointer-events: none;
+	}
+
+	input[type='submit'] {
+	  background-color: #007bff;
+	  border: none;
+	  color: #fff;
+	  padding: 10px 20px;
+	  border-radius: 5px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  transition: background-color 0.3s ease-in-out;
+	}
+
+	
+	button:hover {
+	  background-color: #0062cc;
+	}
+
+	body {
+	  font-family: Arial, sans-serif;
+	  background-color: #f8f8f8;
+	}
+
+	.container {
+	  max-width: 600px;
+	  margin: 0 auto;
+	  padding: 20px;
+	  background-color: #fff;
+	  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	}
+
+	.entry {
+	  margin-bottom: 20px;
+	  padding: 10px;
+	  border-left: 5px solid #007bff;
+	}
+
+	.entry p {
+	  margin: 0;
+	  font-size: 16px;
+	  line-height: 1.5;
+	}
+
+	.entry p:first-of-type {
+	  font-weight: bold;
+	  color: #007bff;
+	}
+
+	.entry p:last-of-type {
+	  color: #555;
+	}
+
+	/* ナビゲーションメニューのスタイル */
+	nav {
+	  background-color: #fff;
+	  border: 1px solid #ddd;
+	  border-radius: 5px;
+	  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	  margin: 20px auto;
+	  max-width: 800px;
+	  padding: 10px;
+	  text-align: center;
+	}
+
+	nav ul {
+	  list-style: none;
+	  margin: 0;
+	  padding: 0;
+	}
+
+	nav li {
+	  display: inline-block;
+	  margin: 0 10px;
+	}
+
+	nav a {
+	  color: #333;
+	  text-decoration: none;
+	  font-size: 18px;
+	  font-weight: bold;
+	  text-transform: uppercase;
+	  transition: color 0.3s ease-in-out;
+	}
+
+	nav a:hover {
+	  color: #666;
+	}
+  </style>    
 </head>
 <body>
-  <input type="date" id="flask_day">
-  <select name="resident_id" id="resident_id" placeholder="名前">
-    <option value=-1>選択してください</option>
-    {% for resident in residents %}
-      <option value="{{ resident[0] }}">{{ resident[1] }}</option>
-    {% endfor %}
-  </select>
-   <select id="return_check">
-      <option value="all_record">選択してください</option>
-      <option value="return">帰館</option>
-      <option value="no_return">未帰館</option>
-    </select>
-  <p onClick="test()">検索</p>
-  
-  <form method="POST">
-    <select name="go_out">
-      <option value="go">出発</option>
-      <option value="return">帰館</option>
-    </select>
-    <input type="date" id="today" name="door_date">
-    <input type="time" name="door_time" value="{{local_time}}">
-    <select name="select_resident_id" placeholder="名前">
-      <option>選択してください</option>
-      {% for resident in residents %}
-        <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
-      {% endfor %}
-    </select>
-
-    <input type="submit" value="送信">
-    
-  </form>
-
-	{% block content %}
+  <div class="hero">
+	<div class="hero-text">welcome to AdditionalSwitch</div>
+  </div>
+  <div class="search-container">
+ 	 <input type="date" id="flask_day">
+	  <div class="select-wrapper">
+		  <select class="select-design" name="resident_id" id="resident_id" placeholder="名前">
+		    <option value=-1>選択してください</option>
+		    {% for resident in residents %}
+		      <option value="{{ resident[0] }}">{{ resident[1] }}</option>
+		    {% endfor %}
+		  </select>
+		  <i class="fas fa-chevron-down"></i>
+	  </div>
+	  <div class="select-wrapper"> 
+		   <select class="select-design" id="return_check">
+		      <option value="all_record">選択してください</option>
+		      <option value="return">帰館</option>
+		      <option value="no_return">未帰館</option>
+		    </select>
+		    <i class="fas fa-chevron-down"></i>
+	  </div>
+	  <input type="submit" onClick="test()" value="検索">
+  </div>
+  <div class="search-container">
+	  <form method="POST">
+	    <select name="go_out">
+	      <option value="go">出発</option>
+	      <option value="return">帰館</option>
+	    </select>
+	    <input type="date" id="today" name="door_date">
+	    <input type="time" name="door_time" value="{{local_time}}">
+	    <select name="select_resident_id" placeholder="名前">
+	      <option>選択してください</option>
+	      {% for resident in residents %}
+	        <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
+	      {% endfor %}
+	    </select>
+	    <input type="submit" value="送信">
+	    
+	  </form>
+  </div>
+  <div class="container">
+  {% block content %}
     {% for day_record in today %}
-        <p>{{ day_record[0] }} 外出時間:{{ day_record[1] }} {{ day_record[2] }}</p>
-        <p>帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
-        <p>{{ day_record[5] }}</p>
-        
-        <hr>
+	<div class="entry">
+	        <p>{{ day_record[0] }}: {{ day_record[5] }}</p>
+		<p> 外出時間:{{ day_record[1] }} {{ day_record[2] }}</p>
+	        <p>帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
+	        
+	        <hr>
+	</div>
     {% endfor %}
     {{ pagination.links }}
   {% endblock %} 
@@ -76,3 +300,4 @@
     
 </script>
 </html>
+

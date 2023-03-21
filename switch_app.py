@@ -107,6 +107,7 @@ class SwitchView(object):
 	
 	#すべてのdoor_recordか、entrance_dayにデータが入っている物のみか、entrance_dayがNullの物かを選択し、呼び出す
 	def serch_today_value(day,resident_id,return_check):
+	    print(resident_id)
 	    select_value = 1
 	    if int(resident_id) != -1:
 		    select_value = 0

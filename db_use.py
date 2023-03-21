@@ -176,7 +176,7 @@ class SwitchDB(object):
 			    return
 
 		    switch_motor.move_to_position(30)
-
+		    print('switch')
 		    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
@@ -196,4 +196,5 @@ while True:
 	    switch_db.mb()
     
     except requests.exceptions.ConnectionError as e:
+	    print('switch error')
 	    switch_db.net_error_add_db()
