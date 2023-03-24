@@ -1,0 +1,59 @@
+{% extends "layout.html" %} 
+
+{% block content %}
+<div class="create-container">
+<form onSubmit="" method="POST">
+        <div class="input-container">
+          <input class="input-field" type="text" name="new_name" placeholder="氏名">
+          <label for="input-field" class="input-label">氏名</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <input type="number" class="input-field" name="new_number" placeholder="部屋番号">
+          <label for="input-field" class="input-label">部屋番号</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <select class="input-field" name="new_room_number" placeholder="部屋内番号">
+            <option value="">部屋内番号を選択</option>
+            
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <label for="input-field" class="input-label">部屋内番号</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <select class="input-field" name="new_going_to_alone" placeholder="外出に関して">
+            <option value="">一人外出の有無</option>
+            
+            <option value="一人外出可能">可能</option>
+            <option value="一人外出可能(一部)">可能(一部)</option>
+            <option value="一人外出不可能">不可能</option>
+          </select>
+          <label for="input-field" class="input-label">外出に関して</label>
+          <span class="input-highlight"></span>
+        </div>
+        <button type="submit">送信</button>
+</form>
+</div>
+<script>
+	var today = new Date();
+	function make_day(day) {
+      day.setDate(day.getDate());
+      var yyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
+      return yyyy + '-' + mm + '-' + dd;
+    }
+    
+	page_value = make_day(today)
+	console.log({{url_after_create|tojson}})
+	if({{url_after_create|tojson}} != 'no url') {
+			alert('利用者を新規登録しました。')
+			window.location.href = {{url_after_create|tojson}};
+	}
+</script>
+{% endblock %}

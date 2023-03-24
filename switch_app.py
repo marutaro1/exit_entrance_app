@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 from flask import Flask, request, render_template
 from flask_paginate import Pagination, get_page_parameter
 from dotenv import load_dotenv
@@ -11,8 +13,13 @@ import schedule
 import nfc_reader
 from transitions import Machine
 
+import psutil
+
 
 app = Flask(__name__)
+
+cr = nfc_reader.MyCardReader()
+print(cr.card_type)
 
 load_dotenv()
 
@@ -54,6 +61,7 @@ class SwitchView(object):
 	def __init__(self):
 	    self.select_state = ''
 	    self.return_post_method = ''
+	    self.url_after_create = ''
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
@@ -296,6 +304,55 @@ class SwitchView(object):
 		    #接続を閉じる
 		    connection.close()
 	    return render_template('index.html', residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
+	
+	def post_resident(self,name,number,room_number,going_to_alone,card_id):
+	    try:
+		    self.url_after_create = 'no url'
+		    now = datetime.datetime.now()
+		    day = str(now)[0:11]
+		    cursor.execute("""
+		    INSERT INTO 
+		    resident
+		    (name,number,number_people,going_to_alone,card_id) 
+		    VALUES
+		    ('%s',%s,%s,'%s','%s')
+		    """ % (name,int(number),int(room_number),going_to_alone,card_id))
+		    connection.commit()
+		    self.url_after_create = 'http://localhost:8000/' + day + '/-1/all_record'
+	    except ValueError:
+		    print('ValueError')
+		    self.url_after_create = 'http://localhost:8000/create'
+	    print(self.url_after_create)
+	    
+	def kill_db_use():
+		# 停止したいプロセス名を指定する
+		process_name = "db_use.py"
+		os.system(f'pkill -f {process_name}')
+	
+	def restart_db_use():
+		process_name = "db_use.py"
+		process = subprocess.Popen(["lxterminal","-e","python3", process_name])
+		
 
+	@app.route('/create', methods=['GET','POST'])
+	def new_resident_create():
+		url_after='no url'
+		
+		print(request.method)
+		if request.method == 'POST' and request.form['new_name'] != '':
+			SwitchView.kill_db_use()
+			print(request.form['new_name'])
+			print(request.form['new_number'])
+			print(request.form['new_room_number'])
+			print(request.form['new_going_to_alone'])
+			print(cr.card_data())
+			print(cr.idm_data)
+			SwitchView.post_resident(SwitchView,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
+			url_after=SwitchView.url_after_create
+			SwitchView.restart_db_use()
+			
+		return render_template('create.html', url_after_create=url_after)
+	
 if __name__ == "__main__":
+    
     app.run(port = 8000, debug=True)
