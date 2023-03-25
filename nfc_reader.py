@@ -42,15 +42,14 @@ class MyCardReader(object):
         #タグ情報を全て表示
         #print(tag)
         #IDmのみ取得して表示
-        self.idm = binascii.hexlify(tag._nfcid)
-        card_idm = str(self.idm)[2:-1]
-        self.add_record_database(card_idm)
+        idm = binascii.hexlify(tag._nfcid)
+        self.idm_data = str(idm)[2:-1]
+        self.add_record_database()
         
         #self.idm_data = self.idm
-        self.idm_data = card_idm
         
-    def add_record_database(self,card_idm):
-        cursor.execute("INSERT INTO card_record(datetime,type,idm) values(%s,%s,%s)" % ("'" + self.now_format + "'","'" + self.card_type + "'","'" + card_idm + "'"))
+    def add_record_database(self):
+        cursor.execute("INSERT INTO card_record(datetime,type,idm) values(%s,%s,%s)" % ("'" + self.now_format + "'","'" + self.card_type + "'","'" + self.idm_data + "'"))
         connection.commit()
         
     def read_id(self):

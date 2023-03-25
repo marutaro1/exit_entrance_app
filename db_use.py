@@ -94,7 +94,7 @@ class SwitchDB(object):
 			     AND
 			     card_record.idm = '%s'
 			     ORDER BY card_record.datetime DESC
-			     """ % ('一人外出可%',day + '%',self.page_value,str(cr.idm_data)[2:-1]))
+			     """ % ('一人外出可%',day + '%',self.page_value,cr.idm_data))
 	    return cursor.fetchone()
 	    
 	#日付とresident_idが一致するdoor_recordの最新のデータを一つ呼び出す
@@ -166,7 +166,7 @@ class SwitchDB(object):
 	def mb(self):
 	    try:
 		    print(cr.card_data())
-		    self.idm = str(cr.idm_data)[2:-1]
+		    self.idm = cr.idm_data
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
 		    new_record = self.select_card_record(day,cr)
