@@ -4,17 +4,17 @@
 <div class="create-container">
 <form onSubmit="" method="POST">
         <div class="input-container">
-          <input class="input-field" type="text" name="new_name" placeholder="氏名">
+          <input class="input-field" type="text" id="new_name" name="new_name" placeholder="氏名" required='required'>
           <label for="input-field" class="input-label">氏名</label>
           <span class="input-highlight"></span>
         </div>
         <div class="input-container">
-          <input type="number" class="input-field" name="new_number" placeholder="部屋番号">
+          <input type="number" class="input-field" id="new_number" name="new_number" placeholder="部屋番号" required='required'>
           <label for="input-field" class="input-label">部屋番号</label>
           <span class="input-highlight"></span>
         </div>
         <div class="input-container">
-          <select class="input-field" name="new_room_number" placeholder="部屋内番号">
+          <select class="input-field" id="new_room_number" name="new_room_number" placeholder="部屋内番号" required='required'>
             <option value="">部屋内番号を選択</option>
             
             <option value="0">0</option>
@@ -26,7 +26,7 @@
           <span class="input-highlight"></span>
         </div>
         <div class="input-container">
-          <select class="input-field" name="new_going_to_alone" placeholder="外出に関して">
+          <select class="input-field" id="new_going_to_alone" name="new_going_to_alone" placeholder="外出に関して" required='required'>
             <option value="">一人外出の有無</option>
             
             <option value="一人外出可能">可能</option>
@@ -36,7 +36,7 @@
           <label for="input-field" class="input-label">外出に関して</label>
           <span class="input-highlight"></span>
         </div>
-        <button type="submit">送信</button>
+        <button type="submit" onclick="post_create_form()">送信</button>
 </form>
 </div>
 <script>
@@ -51,8 +51,15 @@
     
 	page_value = make_day(today)
 	console.log({{url_after_create|tojson}})
+	function post_create_form() {
+			if(document.getElementById('new_name').value == '' || document.getElementById('new_number').value == '' || document.getElementById('new_room_number').value == '' || document.getElementById('new_going_to_alone').value == '') {
+			alert('空欄があります')
+			return 
+		}
+		alert('カードをかざしてください')
+	}
 	if({{url_after_create|tojson}} != 'no url') {
-			
+		alert('利用者を新規登録しました')
 			window.location.href = {{url_after_create|tojson}};
 	}
 </script>

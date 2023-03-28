@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="create-container">
+
 <div class="input-container">
   <select class="input-field" name="resident_id" id="resident_id">
 	<option value=-1>選択してください</option>
@@ -14,6 +15,7 @@
 </div>
 <button onclick="serch_resident()">検索</button>
 <form id="myForm" method="POST" sction="/update">
+	<input type="hidden" id="select_resident_id" name="select_resident_id" value="">
         <div class="input-container">
           <input class="input-field" type="text" id="name" name="name" placeholder="氏名" required='required'>
           <label for="input-field" class="input-label">氏名</label>
@@ -56,8 +58,8 @@
           <label for="input-field" class="input-label">外出に関して</label>
           <span class="input-highlight"></span>
         </div>
+	<button onclick="post_update_form()">登録</button>
 </form>
-<button onclick="post_update_form()">登録</button>
 </div>
 <script>
     var today = new Date();
@@ -68,8 +70,8 @@
       var dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
+   
     
-
 	
     var resident = document.getElementById('resident_id').value
     var select_card_id = document.getElementById('card_id')
@@ -79,7 +81,7 @@
 	  console.log(resident)
 	  var regex = /[\w\u3040-\u30FF]+|'[^']*'/g;
 	  resident = resident.match(regex).map(s => s.replace(/^'|'$/g, m => m[0] === "'" ? "" : m));
-	  var select_resident_id = resident[0]
+	  const select_resident_id = resident[0]
 	  var name = resident[1] 
 	  var number = Number(resident[2])
 	  var room_number = Number(resident[3])
@@ -87,13 +89,13 @@
 	  var card_id = document.createElement('option')
 	  card_id.value=resident[5]
 	  card_id.textContent = '変更しない'
+	  
+	  document.getElementById('select_resident_id').value = select_resident_id
 	  document.getElementById('name').value = name
 	  document.getElementById('number').value = number
 	  document.getElementById('room_number').value = room_number
 	  document.getElementById('going_to_alone').value = going_to_alone
 	  select_card_id.append(card_id)
-	  var select_resident_id = resident[0]
-	  console.log(select_resident_id)
 	}
 	
 	function post_update_form() {
@@ -102,26 +104,27 @@
 	    const result = confirm('カードIDを変更しますか？')
 	    if(result) {
 	      document.getElementById('card_id').value = 'change'
+	      alert('カードをかざしてください')
 	    }
 	    else {
 	      document.getElementById('card_id').value = resident[5]
 	    }
 	   
 	  }
-	  var select_resident_id = resident[0]
-	  const form = document.getElementById('myForm')
-	  const formData = new FormData(form)
-	  formData.append('select_resident_id',select_resident_id)
-	  const xhr = new XMLHttpRequest()
-	  xhr.open('POST','/update')
+	  
 	  if(document.getElementById('name').value == '' || document.getElementById('number').value == '' || document.getElementById('room_number').value == '' || document.getElementById('going_to_alone').value == '') {
 	    alert('空欄があります')
 	    return 
 	  }
-	  xhr.send(formData)
-	  
-	  window.location.href = 'http://localhost:8000/' + make_day(today) + '/-1/all_record'
 	  
     }
+    
+     if({{url_after_update|tojson}} !== 'no url') {
+	      alert('利用者情報を更新しました')
+	      window.location.href = {{url_after_update|tojson}};
+	  }
+  
+
+
 </script>
 {% endblock %}
