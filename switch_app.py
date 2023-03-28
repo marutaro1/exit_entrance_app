@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from flask_paginate import Pagination, get_page_parameter
 from dotenv import load_dotenv
 import datetime
@@ -62,6 +62,7 @@ class SwitchView(object):
 	    self.select_state = ''
 	    self.return_post_method = ''
 	    self.url_after_create = ''
+	    self.url_after_update = ''
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
@@ -78,6 +79,10 @@ class SwitchView(object):
 			    print(resident_value)
 			    continue
 	    return resident_value
+	    
+	def all_residents():
+	    cursor.execute("SELECT * FROM resident")
+	    return cursor.fetchall()
 
 	#residentから一人外出可能な人だけを取り出す
 	def residents_value():
@@ -323,6 +328,23 @@ class SwitchView(object):
 		    print('ValueError')
 		    self.url_after_create = 'http://localhost:8000/create'
 	    print(self.url_after_create)
+	
+	def post_update_resident(self,resident_id,name,number,room_number,going_to_alone,card_id):
+	    try:
+		    self.url_after_create = 'no url'
+		    now = datetime.datetime.now()
+		    day = str(now)[0:11]
+		    cursor.execute("""
+		    UPDATE resident
+		    SET name = '%s',number = %s,number_people= %s,going_to_alone='%s',card_id='%s'
+		    WHERE id = %s
+		    """ % (name,int(number),int(room_number),going_to_alone,card_id,resident_id))
+		    connection.commit()
+		    self.url_after_update = 'success'
+	    except ValueError:
+		    print('ValueError')
+		    self.url_after_update = 'error'
+	    print(self.url_after_update)
 	    
 	def kill_db_use():
 		# 停止したいプロセス名を指定する
@@ -341,10 +363,6 @@ class SwitchView(object):
 		print(request.method)
 		if request.method == 'POST' and request.form['new_name'] != '':
 			SwitchView.kill_db_use()
-			print(request.form['new_name'])
-			print(request.form['new_number'])
-			print(request.form['new_room_number'])
-			print(request.form['new_going_to_alone'])
 			print(cr.card_data())
 			print(cr.idm_data)
 			SwitchView.post_resident(SwitchView,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
@@ -352,6 +370,32 @@ class SwitchView(object):
 			SwitchView.restart_db_use()
 			
 		return render_template('create.html', url_after_create=url_after)
+
+	    
+	@app.route('/update', methods=['GET','POST'])
+	def resident_update():
+		url_after=['no url']
+		residents = SwitchView.all_residents()
+		
+		print(request.method)
+		if request.method == 'POST' and request.form['name'] != '':
+			if request.form['card_id'] == 'change':
+				SwitchView.kill_db_use()
+				print(cr.card_data())
+				print(cr.idm_data)
+				card_id = cr.idm_data
+			    
+				print(request.form['name'])
+				SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
+				
+				
+				SwitchView.restart_db_use()
+			elif request.form['card_id'] != 'change':
+				print(request.form['name'])
+				SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],request.form['card_id'])
+				
+			
+		return render_template('update.html', residents=residents)
 	
 if __name__ == "__main__":
     

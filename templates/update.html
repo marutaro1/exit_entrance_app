@@ -1,0 +1,127 @@
+{% extends "layout.html" %} 
+
+{% block content %}
+<div class="create-container">
+<div class="input-container">
+  <select class="input-field" name="resident_id" id="resident_id">
+	<option value=-1>選択してください</option>
+	{% for resident in residents %}
+	  <option value="{{ resident }}">{{ resident[1] }}</option>
+	{% endfor %}
+  </select>
+  <label for="input-field" class="input-label">氏名</label>
+  <span class="input-highlight"></span>
+</div>
+<button onclick="serch_resident()">検索</button>
+<form id="myForm" method="POST" sction="/update">
+        <div class="input-container">
+          <input class="input-field" type="text" id="name" name="name" placeholder="氏名" required='required'>
+          <label for="input-field" class="input-label">氏名</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <input type="number" class="input-field" id="number" name="number" placeholder="部屋番号" required>
+          <label for="input-field" class="input-label">部屋番号</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <select class="input-field" id="room_number" name="room_number" placeholder="部屋内番号" required>
+            <option value="">部屋内番号を選択</option>
+            
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <label for="input-field" class="input-label">部屋内番号</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <select class="input-field" id="going_to_alone" name="going_to_alone" placeholder="外出に関して" required>
+            <option value="">一人外出の有無</option>
+            
+            <option value="一人外出可能">可能</option>
+            <option value="一人外出可能(一部)">可能(一部)</option>
+            <option value="一人外出不可能">不可能</option>
+          </select>
+          <label for="input-field" class="input-label">外出に関して</label>
+          <span class="input-highlight"></span>
+        </div>
+
+        <div class="input-container">
+          <select class="input-field" id="card_id" name="card_id" placeholder="カードID">
+            <option value="">カード変更の有無</option>
+            <option value="change">変更する</option>
+          </select>
+          <label for="input-field" class="input-label">外出に関して</label>
+          <span class="input-highlight"></span>
+        </div>
+</form>
+<button onclick="post_update_form()">登録</button>
+</div>
+<script>
+    var today = new Date();
+    function make_day(day) {
+      day.setDate(day.getDate());
+      var yyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
+      return yyyy + '-' + mm + '-' + dd;
+    }
+    
+
+	
+    var resident = document.getElementById('resident_id').value
+    var select_card_id = document.getElementById('card_id')
+    
+    function serch_resident() {
+	  resident = document.getElementById('resident_id').value
+	  console.log(resident)
+	  var regex = /[\w\u3040-\u30FF]+|'[^']*'/g;
+	  resident = resident.match(regex).map(s => s.replace(/^'|'$/g, m => m[0] === "'" ? "" : m));
+	  var select_resident_id = resident[0]
+	  var name = resident[1] 
+	  var number = Number(resident[2])
+	  var room_number = Number(resident[3])
+	  var going_to_alone = resident[4]
+	  var card_id = document.createElement('option')
+	  card_id.value=resident[5]
+	  card_id.textContent = '変更しない'
+	  document.getElementById('name').value = name
+	  document.getElementById('number').value = number
+	  document.getElementById('room_number').value = room_number
+	  document.getElementById('going_to_alone').value = going_to_alone
+	  select_card_id.append(card_id)
+	  var select_resident_id = resident[0]
+	  console.log(select_resident_id)
+	}
+	
+	function post_update_form() {
+	  const url = ''
+	  if(document.getElementById('card_id').value == '') {
+	    const result = confirm('カードIDを変更しますか？')
+	    if(result) {
+	      document.getElementById('card_id').value = 'change'
+	    }
+	    else {
+	      document.getElementById('card_id').value = resident[5]
+	    }
+	   
+	  }
+	  var select_resident_id = resident[0]
+	  const form = document.getElementById('myForm')
+	  const formData = new FormData(form)
+	  formData.append('select_resident_id',select_resident_id)
+	  const xhr = new XMLHttpRequest()
+	  xhr.open('POST','/update')
+	  if(document.getElementById('name').value == '' || document.getElementById('number').value == '' || document.getElementById('room_number').value == '' || document.getElementById('going_to_alone').value == '') {
+	    alert('空欄があります')
+	    return 
+	  }
+	  xhr.send(formData)
+	  
+	  window.location.href = 'http://localhost:8000/' + make_day(today) + '/-1/all_record'
+	  
+    }
+</script>
+{% endblock %}

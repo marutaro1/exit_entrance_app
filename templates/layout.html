@@ -262,7 +262,7 @@
         <h1>AdditionalSwitch</h1>
         <button onclick="index_url()">ホーム</button>
         <button onclick="create_url()">新規</button>
-        <button>更新</button>
+        <button onclick="update_url()">更新</button>
       </div>
   </div>  
   <div>
@@ -286,6 +286,9 @@
 	
 	function create_url() {
 			window.location.href = 'http://localhost:8000/create'
+	}
+	function update_url() {
+			window.location.href = 'http://localhost:8000/update'
 	}
 </script>
 </body>

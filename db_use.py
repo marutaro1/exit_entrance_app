@@ -70,6 +70,7 @@ class SwitchDB(object):
 	    }
 	    requests.post(url,data=data)
 	    
+	    
 	#idを選択し、card_recordとresidentを合わせて一致する最新のデータを1つ呼び出す
 	def select_card_record(self,day,cr):
 	    cursor.execute("""SELECT
