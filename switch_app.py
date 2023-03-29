@@ -131,7 +131,8 @@ class SwitchView(object):
 			    exit_time,
 			    entrance_day,
 			    entrance_time,
-			    nb
+			    nb,
+			    error_judgment
 			    FROM
 			    door_record
 			    INNER JOIN
@@ -163,7 +164,8 @@ class SwitchView(object):
 			    exit_time,
 			    entrance_day,
 			    entrance_time,
-			    nb
+			    nb,
+			    error_judgment
 			    FROM
 			    door_record
 			    INNER JOIN
@@ -188,7 +190,8 @@ class SwitchView(object):
 			    exit_time,
 			    entrance_day,
 			    entrance_time,
-			    nb
+			    nb,
+			    error_judgment
 			    FROM
 			    door_record
 			    INNER JOIN

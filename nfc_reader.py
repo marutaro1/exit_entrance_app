@@ -30,6 +30,7 @@ class MyCardReader(object):
             self.card_type = 'go'
             self.now_format = ''
             self.last_time = datetime.datetime.now()
+            self.error_judgment = ''
             
     def on_connect(self, tag):
         now = datetime.datetime.now()
@@ -49,7 +50,7 @@ class MyCardReader(object):
         #self.idm_data = self.idm
         
     def add_record_database(self):
-        cursor.execute("INSERT INTO card_record(datetime,type,idm) values(%s,%s,%s)" % ("'" + self.now_format + "'","'" + self.card_type + "'","'" + self.idm_data + "'"))
+        cursor.execute("INSERT INTO card_record(datetime,type,idm) values('%s','%s','%s')" % (self.now_format,self.card_type,self.idm_data))
         connection.commit()
         
     def read_id(self):

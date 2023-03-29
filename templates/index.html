@@ -71,6 +71,11 @@
         <div class="entry">
               <h2>{{ day_record[0] }}: {{ day_record[5] }}</h2>
               <p> 外出時間:{{ day_record[1] }} {{ day_record[2] }}    帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
+	      {% if day_record[6] == 'no' %}
+	      <p>ネットワーク:安定</p>
+	      {% elif day_record[6] == 'error' %}
+	      <p>ネットワーク:不安定</p>
+	      {% endif %}
               <hr>
         </div>
         {% endfor %}

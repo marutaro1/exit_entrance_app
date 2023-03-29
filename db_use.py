@@ -20,12 +20,12 @@ switch_motor = motor.ServoMotor()
 cr = nfc_reader.MyCardReader()
 print(cr.card_type)
 
-'''
+
 headers = {
     'Authorization': '42b8a2cbc94cd3a845eafffce207a3db789ff1bc1fa92d428a6c2e921bf3fa69428fb37b200195e58c4fbaa9dbf454fa',
     'Content-Type': 'application/json; charset=utf8',
     }
-'''
+
 
 json_data = {
     'command': 'press',
@@ -62,6 +62,9 @@ class SwitchDB(object):
 	    
 	#日時、名前、詳細をslackに通知させる
 	def notification(day,time,name,nb):
+	    if cr.error_judgment == 'error':
+		    print('network error')
+		    return
 	    url = "https://slack.com/api/chat.postMessage"
 	    data = {
 	    "token":os.environ['SLACK_TOKEN'],
@@ -123,6 +126,7 @@ class SwitchDB(object):
 	    day = event.kwargs.get('day')
 	    time = event.kwargs.get('time')
 	    door_state = ['exit_day','exit_time']
+	    judgment = event.kwargs.get('judgment')
 	    if page_value == 'return':
 		    door_state = ['entrance_day','entrance_time']
 		    day_record = SwitchDB.select_door_record("'" + day + "'",resident_id)
@@ -133,7 +137,7 @@ class SwitchDB(object):
 			    connection.commit()
 			    return
 	    print('puls add')
-	    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb) values (%s,%s,%s,%s)" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb))
+	    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb,error_judgment) values (%s,%s,%s,%s,'%s')" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb,judgment))
 	    connection.commit()
 	     
 	def csv_migrate(self):
@@ -151,38 +155,27 @@ class SwitchDB(object):
 	    cursor.execute(f"DELETE FROM card_record WHERE type = '%s' AND datetime = '%s'" % (self.page_value, date))
 	    connection.commit()
 	    
-	def net_error_add_db(self):
-	    cr.card_data()
-	    cursor.execute(f"update card_record set type = '%s' where datetime = '%s' and idm = '%s'" % (('error_time:' + self.page_value), cr.now_format, self.idm))
-	    connection.commit()
-	    self.del_card_data(cr.now_format)
-	    self.del_card_data(cr.now_format)
-	    delete_datetime = datetime.datetime.strptime(cr.now_format,'%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=-1)
-	    self.del_card_data(delete_datetime)
-	    self.del_card_data(cr.now_format)
-	    delete_datetime = datetime.datetime.strptime(cr.now_format,'%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=+1)
-	    self.del_card_data(delete_datetime)
-	    self.del_card_data(cr.now_format)
+	def mb(self,judgment):
 	    
-	def mb(self):
 	    try:
-		    print(cr.card_data())
-		    self.idm = cr.idm_data
+		    cr.error_judgment = judgment
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
+		    print(cr.card_data())
+		    self.idm = cr.idm_data
 		    new_record = self.select_card_record(day,cr)
 		    print(new_record)
 		    if new_record is None:
 			    print('pass')
 			    return
-
+		    
 		    switch_motor.move_to_position(30)
 		    print('switch')
 		    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
 		    SwitchDB.trigger(self.page_value)
-		    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19])
+		    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19],judgment=judgment)
 		    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
 		    connection.commit()
 					    
@@ -194,8 +187,9 @@ class SwitchDB(object):
 switch_db = SwitchDB()
 while True:
     try:
-	    switch_db.mb()
+	    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
+	    switch_db.mb('no')
     
-    except requests.exceptions.ConnectionError as e:
-	    print('switch error')
-	    switch_db.net_error_add_db()
+    except requests.exceptions.ConnectionError:
+	    switch_db.mb('error')
+    
