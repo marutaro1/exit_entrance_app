@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="create-container">
+<h2>新規利用者登録</h2>
 <form onSubmit="" method="POST">
         <div class="input-container">
           <input class="input-field" type="text" id="new_name" name="new_name" placeholder="氏名" required='required'>
@@ -36,7 +37,7 @@
           <label for="input-field" class="input-label">外出に関して</label>
           <span class="input-highlight"></span>
         </div>
-        <button type="submit" onclick="post_create_form()">送信</button>
+        <button class="btn" type="submit" onclick="post_create_form()">登録</button>
 </form>
 </div>
 <script>

@@ -5,7 +5,7 @@
   <style>
 	
 	body {
-	background-color: #e1e1e1;
+	background-color: #f5f5f5;
 	}
 
 	/* ヒーローイメージを包む要素のスタイル */
@@ -54,10 +54,22 @@
 	width: 10%;
 	}
 	
-	.create-container .input-container {
-	margin: 20px;
+	.create-container {
+	background-color: #fff;
+	margin-top: 30px;
+	margin-left: 20%;
+	margin-right: 20%;
+	padding: 40px;		
+	border-radius: 10px;
+	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+	height: 100%;
+	}
 	
+	.create-container .input-container {
+	position: relative;
+	margin: 20px;
 	width: 80%;
+	height: 100%;
 	}
 	
 	.search-container form {
@@ -67,29 +79,10 @@
 	
 	.create-container form {
 	width:100%;
-	margin: 0px;
+	margin-top: 50px;
+	height: 100%;
 	}
-	
-	.create-container {
-	background-color: #fff;
-	margin-left: 20%;
-	margin-right: 20%;
-	padding: 40px;		
-	border-radius: 10px;
-	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-	}
-	
-	.create-container form {
-	width:100%;
-	margin-left: 32%;
-	margin-right: 50%;
-	}
-	
-	.create-container button {
-	height: 40px;
-	width: 5%;
-	padding: 10px;	
-	}
+
 
 	/* Input field */
 	.input-field {
@@ -105,7 +98,15 @@
 	}
 	
 	select {
-	margin-top: 4.5px;  
+	margin-top:5.5px;
+	}
+	
+	input[type="date"] {
+	margin-top: 5px;  
+	}
+	
+	input[type="time"] {
+	margin-top: 1.8px;
 	}
 
 	/* Input label */
@@ -185,9 +186,15 @@
 	input[type="submit"]:hover::before {
 	width: 100%;
 	}
+	
+	h2 {
+	  font-size: 30px;
+	  margin: 0;
+	  color: #373636;
+	}
 
 	.container {
-	max-height: 1000px; /* 表示する高さを指定 */
+	max-height: 300px; /* 表示する高さを指定 */
 	margin: 50px;
 	overflow-y: scroll;
 	}
@@ -198,6 +205,7 @@
 	padding: 20px;
 	margin: 10px;
 	}
+	
 
 	.entry div {
 	  display: flex; 
@@ -265,7 +273,7 @@
         <button onclick="update_url()">更新</button>
       </div>
   </div>  
-  <div>
+  <div class="body">
 	{% block content %}{% endblock %}
   </div>
 <script>
