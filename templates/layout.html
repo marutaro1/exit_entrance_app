@@ -279,6 +279,7 @@
 <script>
     var today = new Date();
     
+    
     function make_day(day) {
       day.setDate(day.getDate());
       var yyyy = day.getFullYear();
@@ -289,14 +290,14 @@
     page_value = make_day(today)
     
     function index_url() {
-			window.location.href = 'http://localhost:8000/' + page_value + '/-1/all_record'
+			window.location.href = window.location.origin + '/' + page_value + '/-1/all_record'
 	}
 	
 	function create_url() {
-			window.location.href = 'http://localhost:8000/create'
+			window.location.href = window.location.origin + '/create'
 	}
 	function update_url() {
-			window.location.href = 'http://localhost:8000/update'
+			window.location.href = window.location.origin + '/update'
 	}
 </script>
 </body>

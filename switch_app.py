@@ -9,7 +9,8 @@ import datetime
 import nfc
 import requests
 import MySQLdb
-import schedule
+from flask_bcrypt import Bcrypt
+
 import nfc_reader
 from transitions import Machine
 
@@ -17,6 +18,7 @@ import psutil
 
 
 app = Flask(__name__)
+bcrypt = Bcrypt()
 
 cr = nfc_reader.MyCardReader()
 print(cr.card_type)
@@ -63,6 +65,54 @@ class SwitchView(object):
 	    self.return_post_method = ''
 	    self.url_after_create = ''
 	    self.url_after_update = 'no_url'
+	    self.login_staff = 'no staff'
+	    
+	@app.route('/sign_in', methods=['GET','POST'])
+	def sign_in():
+	    now = datetime.datetime.now()
+	    day = str(now)[0:11]
+	    SwitchView.login_staff = 'no staff'
+	    home_url = 'no url'
+	    print('login status:' + SwitchView.login_staff)
+	    if request.method == 'POST':
+		    login_id = request.form['login_id']
+		    password = request.form['password']
+		    print(login_id)
+		    print(password)
+		    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+		    cursor.execute('''
+			    SELECT * FROM staff
+			    WHERE 
+			    login_id = '%s'
+		    ''' % (login_id))
+		    auth_staff = cursor.fetchone()
+		    print(auth_staff)
+		    if bcrypt.check_password_hash(auth_staff[3],password):
+			    SwitchView.login_staff = auth_staff
+			    print('login')
+			    home_url = request.host_url  + '/' + day + '/-1/all_record'
+		    else:
+			    print('no staff')
+			    home_url = 'no url'
+	    print(SwitchView.login_staff)
+	    return render_template('sign_in.html',home_url=home_url,auth_staff=SwitchView.login_staff)
+			    
+			    
+	@app.route('/sign_up', methods=['GET','POST'])
+	def sign_up():
+	    if request.method == 'POST':
+		    name = request.form['name']
+		    login_id = request.form['login_id']
+		    password = request.form['password']
+		    authority = request.form['authority']
+		    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+		    print(bcrypt.check_password_hash(hashed_password, password))
+		    cursor.execute('''
+			    INSERT INTO staff(name,login_id,password,authority)
+			    VALUE('%s','%s','%s',%s)
+		    ''' % (name,login_id,hashed_password,authority))
+		    connection.commit()
+	    return render_template('sign_up.html',auth_staff=SwitchView.login_staff)
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
@@ -283,6 +333,7 @@ class SwitchView(object):
 		    residents = SwitchView.residents_value()
 		    door_record = SwitchView.door_record_value(page_value)
 		    method_value = request.method
+		    print(request.url)
 		    if request.method == 'POST':
 			    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
 			    if door_record is None or str(request.form['door_time']) != str(door_record[3]):
@@ -311,10 +362,11 @@ class SwitchView(object):
 	    except MySQLdb.OperationalError:
 		    #接続を閉じる
 		    connection.close()
-	    return render_template('index.html', residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
+	    return render_template('index.html', auth_staff=SwitchView.login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
 	
 	def post_resident(self,name,number,room_number,going_to_alone,card_id):
 	    try:
+		    
 		    self.url_after_create = 'no url'
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
@@ -326,10 +378,10 @@ class SwitchView(object):
 		    ('%s',%s,%s,'%s','%s')
 		    """ % (name,int(number),int(room_number),going_to_alone,card_id))
 		    connection.commit()
-		    self.url_after_create = 'http://localhost:8000/' + day + '/-1/all_record'
+		    self.url_after_create = request.host_url + '/' + day + '/-1/all_record'
 	    except ValueError:
 		    print('ValueError')
-		    self.url_after_create = 'http://localhost:8000/create'
+		    self.url_after_create = request.host_url + '/create'
 	    print(self.url_after_create)
 	
 	def post_update_resident(self,resident_id,name,number,room_number,going_to_alone,card_id):
@@ -343,10 +395,10 @@ class SwitchView(object):
 		    WHERE id = %s
 		    """ % (name,int(number),int(room_number),going_to_alone,card_id,resident_id))
 		    connection.commit()
-		    self.url_after_update = 'http://localhost:8000/' + day + '/-1/all_record'
+		    self.url_after_update = request.host_url  + '/' + day + '/-1/all_record'
 	    except ValueError:
 		    print('ValueError')
-		    self.url_after_update = 'http://localhost:8000/update'
+		    self.url_after_update = request.host_url + '/update'
 	    print(self.url_after_update)
 	    
 	def kill_db_use():
@@ -372,7 +424,7 @@ class SwitchView(object):
 			url_after=SwitchView.url_after_create
 			SwitchView.restart_db_use()
 			
-		return render_template('create.html', url_after_create=url_after)
+		return render_template('create.html',auth_staff=SwitchView.login_staff, url_after_create=url_after)
 
 	        
 	@app.route('/update', methods=['GET','POST'])
@@ -394,11 +446,11 @@ class SwitchView(object):
 			    url_after = SwitchView.url_after_update
 			    print(url_after)
 		    print(url_after)
-		    return render_template('update.html', residents=residents, url_after_update=url_after)
+		    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents, url_after_update=url_after)
 	    else:
 		    url_after = 'no url'
 
-	    return render_template('update.html', residents=residents, url_after_update=url_after)
+	    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents,url_after_update=url_after)
 
 	
 if __name__ == "__main__":

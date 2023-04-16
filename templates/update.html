@@ -62,6 +62,9 @@
 </form>
 </div>
 <script>
+    if('{{auth_staff}}' === 'no staff' ) {
+      window.location.href = window.location.origin + '/sign_in'
+    }
     var today = new Date();
     function make_day(day) {
       day.setDate(day.getDate());

@@ -1,0 +1,34 @@
+<div class="create-container">
+<form id="myForm" method="POST" sction="/sign_up">
+        <div class="input-container">
+          <input class="input-field" type="text" id="name" name="name" placeholder="氏名" required='required'>
+          <label for="input-field" class="input-label">氏名</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <input type="text" class="input-field" id="login_id" name="login_id" placeholder="ログインID" required>
+          <label for="input-field" class="input-label">ログインID</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <input type="text" class="input-field" id="password" name="password" placeholder="パスワード" required>
+          <label for="input-field" class="input-label">パスワード</label>
+          <span class="input-highlight"></span>
+        </div>
+        
+        <div class="input-container">
+          <select class="input-field" id="authority" name="authority" placeholder="役職">
+            <option value=0>役職なし</option>
+            <option value=1>役職あり</option>
+          </select>
+          <label for="input-field" class="input-label">役職</label>
+          <span class="input-highlight"></span>
+        </div>
+	<button onclick="post_update_form()">登録</button>
+</form>
+</div>
+<script>
+    if('{{auth_staff}}' === 'no staff' ) {
+      window.location.href = window.location.origin + '/sign_in'
+    }
+</script>

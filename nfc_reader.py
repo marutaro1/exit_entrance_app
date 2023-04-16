@@ -9,6 +9,7 @@ import datetime
 import time
 
 import timeout_decorator
+
 load_dotenv()
 
 container_ip = os.environ['CONTAINER_ID']
@@ -55,7 +56,7 @@ class MyCardReader(object):
         
     def read_id(self):
         try:
-        
+                self.card_type = 'go'
                 print('start')
                 clf = nfc.ContactlessFrontend('usb')
                 try:
@@ -67,7 +68,7 @@ class MyCardReader(object):
         except timeout_decorator.timeout_decorator.TimeoutError:
                 clf.close()
                 print('timeout')
-    
+                
     def card_data(self):
         #タッチ待ち
         self.read_id()

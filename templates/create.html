@@ -41,8 +41,11 @@
 </form>
 </div>
 <script>
-	var today = new Date();
-	function make_day(day) {
+      if('{{auth_staff}}' === 'no staff' ) {
+	window.location.href = window.location.origin + '/sign_in'
+      }
+      var today = new Date();
+      function make_day(day) {
       day.setDate(day.getDate());
       var yyyy = day.getFullYear();
       var mm = ('0' + (day.getMonth() + 1)).slice(-2);

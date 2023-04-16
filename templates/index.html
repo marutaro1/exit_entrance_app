@@ -82,6 +82,9 @@
       </div>
         {{ pagination.links }}
   <script>
+    if('{{auth_staff}}' === 'no staff' ) {
+      window.location.href = window.location.origin + '/sign_in'
+    }
     var today = new Date();
     var flask_day = new Date({{day_value|tojson}});
     
@@ -110,7 +113,7 @@
     var resident_id = document.getElementById('resident_id').value
     var return_check = document.getElementById('return_check').value
     function test() {
-      window.location.href = 'http://localhost:8000/' + document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
+      window.location.href = window.location.origin + '/' + document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
     }
 
   </script>

@@ -1,0 +1,36 @@
+<div class="create-container">
+<form id="myForm" method="POST" sction="/sign_up">
+       <input type="hidden" id="door_time" name="door_time" value=''>
+        <div class="input-container">
+          <input type="text" class="input-field" id="login_id" name="login_id" placeholder="ログインID" required>
+          <label for="input-field" class="input-label">ログインID</label>
+          <span class="input-highlight"></span>
+        </div>
+        <div class="input-container">
+          <input type="text" class="input-field" id="password" name="password" placeholder="パスワード" required>
+          <label for="input-field" class="input-label">パスワード</label>
+          <span class="input-highlight"></span>
+        </div>
+        
+        
+	<button onclick="test()">ログイン</button>
+</form>
+</div>
+<script>
+	var today = new Date();
+    
+    function make_day(day) {
+      day.setDate(day.getDate());
+      var yyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
+      return yyyy + '-' + mm + '-' + dd;
+    }
+    
+    today = make_day(today)
+
+	if ({{home_url|tojson}} !== 'no url'){
+		window.location.href = {{home_url|tojson}}
+	}
+ 
+</script>

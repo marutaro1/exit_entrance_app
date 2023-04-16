@@ -8,7 +8,7 @@ import timeout_decorator
 import requests
 import nfc_reader
 import motor
-import schedule
+
 from transitions import Machine
 import csv
 import switch_app
