@@ -73,7 +73,6 @@ class SwitchView(object):
 	    day = str(now)[0:11]
 	    SwitchView.login_staff = 'no staff'
 	    home_url = 'no url'
-	    print('login status:' + SwitchView.login_staff)
 	    if request.method == 'POST':
 		    login_id = request.form['login_id']
 		    password = request.form['password']
@@ -86,7 +85,6 @@ class SwitchView(object):
 			    login_id = '%s'
 		    ''' % (login_id))
 		    auth_staff = cursor.fetchone()
-		    print(auth_staff)
 		    if bcrypt.check_password_hash(auth_staff[3],password):
 			    SwitchView.login_staff = auth_staff
 			    print('login')
@@ -94,7 +92,7 @@ class SwitchView(object):
 		    else:
 			    print('no staff')
 			    home_url = 'no url'
-	    print(SwitchView.login_staff)
+	    print('login_staff: ' + SwitchView.login_staff[1])
 	    return render_template('sign_in.html',home_url=home_url,auth_staff=SwitchView.login_staff)
 			    
 			    
@@ -359,9 +357,16 @@ class SwitchView(object):
 	    except MySQLdb.ProgrammingError:
 		    print('ProgramingError')
 		
-	    except MySQLdb.OperationalError:
-		    #接続を閉じる
-		    connection.close()
+	    except MySQLdb.OperationalError as e:
+		    if e.args[0] == 2006:
+			    # トランザクションが開始されている場合、ロールバックする
+			    connection.rollback()
+			    # 接続を閉じ
+			    connection.close()
+			    #再接続
+			    cursor = connection.cursor()
+		    else:
+			    return e
 	    return render_template('index.html', auth_staff=SwitchView.login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
 	
 	def post_resident(self,name,number,room_number,going_to_alone,card_id):
@@ -413,42 +418,65 @@ class SwitchView(object):
 
 	@app.route('/create', methods=['GET','POST'])
 	def new_resident_create():
-		url_after='no url'
-		
-		print(request.method)
-		if request.method == 'POST' and request.form['new_name'] != '':
-			SwitchView.kill_db_use()
-			print(cr.card_data())
-			print(cr.idm_data)
-			SwitchView.post_resident(SwitchView,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
-			url_after=SwitchView.url_after_create
-			SwitchView.restart_db_use()
-			
-		return render_template('create.html',auth_staff=SwitchView.login_staff, url_after_create=url_after)
-
+	    try:
+		    url_after='no url'
+		    
+		    print(request.method)
+		    if request.method == 'POST' and request.form['new_name'] != '':
+			    SwitchView.kill_db_use()
+			    print(cr.card_data())
+			    print(cr.idm_data)
+			    SwitchView.post_resident(SwitchView,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
+			    url_after=SwitchView.url_after_create
+			    SwitchView.restart_db_use()
+	    except MySQLdb.OperationalError as e:
+		    if e.args[0] == 2006:
+			    # トランザクションが開始されている場合、ロールバックする
+			    connection.rollback()
+			    # 接続を閉じ
+			    connection.close()
+			    #再接続
+			    cursor = connection.cursor()
+		    else:
+			    return e
+	    
+	    return render_template('create.html',auth_staff=SwitchView.login_staff, url_after_create=url_after)
+	    
 	        
 	@app.route('/update', methods=['GET','POST'])
 	def resident_update():
-	    residents = SwitchView.all_residents()
+	    try:
+		    residents = SwitchView.all_residents()
 
-	    if request.method == 'POST' and request.form['name'] != '':
-		    if request.form['card_id'] == 'change':
-			    SwitchView.kill_db_use()
-			    cr.card_data()
-			    card_id = cr.idm_data
-			    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
-			    url_after = SwitchView.url_after_update
-			    SwitchView.restart_db_use()
-		    elif request.form['card_id'] != 'change':
-			    print(request.form['select_resident_id'])
-			    print(request.form['name'])
-			    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],request.form['card_id'])
-			    url_after = SwitchView.url_after_update
+		    if request.method == 'POST' and request.form['name'] != '':
+			    if request.form['card_id'] == 'change':
+				    SwitchView.kill_db_use()
+				    cr.card_data()
+				    card_id = cr.idm_data
+				    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
+				    url_after = SwitchView.url_after_update
+				    SwitchView.restart_db_use()
+			    elif request.form['card_id'] != 'change':
+				    print(request.form['select_resident_id'])
+				    print(request.form['name'])
+				    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],request.form['card_id'])
+				    url_after = SwitchView.url_after_update
+				    print(url_after)
 			    print(url_after)
-		    print(url_after)
-		    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents, url_after_update=url_after)
-	    else:
-		    url_after = 'no url'
+			    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents, url_after_update=url_after)
+		    else:
+			    url_after = 'no url'
+		    
+	    except MySQLdb.OperationalError as e:
+		    if e.args[0] == 2006:
+			    # トランザクションが開始されている場合、ロールバックする
+			    connection.rollback()
+			    # 接続を閉じ
+			    connection.close()
+			    #再接続
+			    cursor = connection.cursor()
+		    else:
+			    return e
 
 	    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents,url_after_update=url_after)
 

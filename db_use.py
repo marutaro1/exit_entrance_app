@@ -180,9 +180,15 @@ class SwitchDB(object):
 		    connection.commit()
 					    
 	    except MySQLdb.OperationalError as e:
-		    print(e)
-		    #接続を閉じる
-		    connection.close()
+		    if e.args[0] == 2006:
+			    # トランザクションが開始されている場合、ロールバックする
+			    #connection.rollback()
+			    # 接続を閉じ
+			    connection.close()
+			    #再接続
+			    cursor = connection.cursor()
+		    else:
+			    raise e
 
 switch_db = SwitchDB()
 while True:

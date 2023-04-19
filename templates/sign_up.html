@@ -1,4 +1,8 @@
+{% extends "layout.html" %} 
+
+{% block content %}
 <div class="create-container">
+<h2>新規職員登録</h2>
 <form id="myForm" method="POST" sction="/sign_up">
         <div class="input-container">
           <input class="input-field" type="text" id="name" name="name" placeholder="氏名" required='required'>
@@ -32,3 +36,4 @@
       window.location.href = window.location.origin + '/sign_in'
     }
 </script>
+{% endblock %}

@@ -18,7 +18,8 @@
 	align-items: center;
 	text-align: center;
 	margin: 20px;
-	height: 300px;
+	height: 230px;
+	padding-bottom: 30px;
 	}
 
 	/* ヒーローイメージ内のテキストのスタイル */
@@ -35,9 +36,18 @@
 	.hero-text button {
 	height: 40px;
 	width: 15%;
-	padding: 5px;
+	padding: 3px;
 	background: #ffffff;
 	}
+	
+	.hero-text .logout {
+	margin-right: 80%;
+	font-size: 13px;
+	height:30px;
+	width: 12%;
+	padding: 3px;
+	}
+	
 	/* Input container */
 
 	.search-container {
@@ -266,11 +276,16 @@
 <body>
 
    <div class="hero-image">
+	   
       <div class="hero-text">
+		<button class="logout" onclick="signin_url()">ログアウト</button> 
         <h1>AdditionalSwitch</h1>
         <button onclick="index_url()">ホーム</button>
         <button onclick="create_url()">新規</button>
         <button onclick="update_url()">更新</button>
+        <button onclick="signup_url()">新規職員</button>
+        <template></template>
+        
       </div>
   </div>  
   <div class="body">
@@ -289,6 +304,10 @@
     }
     page_value = make_day(today)
     
+    
+    function signin_url() {
+			window.location.href = window.location.origin + '/sign_in'
+	}
     function index_url() {
 			window.location.href = window.location.origin + '/' + page_value + '/-1/all_record'
 	}
@@ -298,6 +317,9 @@
 	}
 	function update_url() {
 			window.location.href = window.location.origin + '/update'
+	}
+	function signup_url() {
+			window.location.href = window.location.origin + '/sign_up'
 	}
 </script>
 </body>
