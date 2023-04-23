@@ -12,11 +12,10 @@ import timeout_decorator
 
 load_dotenv()
 
-container_ip = os.environ['CONTAINER_ID']
 
 #db接続
 connection = MySQLdb.connect(
-	host=container_ip,
+	host=os.environ['CONTAINER_ID'],
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],

@@ -177,6 +177,7 @@ class SwitchDB(object):
 		    SwitchDB.trigger(self.page_value)
 		    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19],judgment=judgment)
 		    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
+		    print('error: ' + cr.error_judgment)
 		    connection.commit()
 					    
 	    except MySQLdb.OperationalError as e:
@@ -193,9 +194,10 @@ class SwitchDB(object):
 switch_db = SwitchDB()
 while True:
     try:
-	    response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
+	    response = requests.get('http://192.168.0.7/sign_in')#ネットワーク確認用
 	    switch_db.mb('no')
     
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError as e:
+	    print(e)
 	    switch_db.mb('error')
     

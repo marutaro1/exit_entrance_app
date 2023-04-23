@@ -69,30 +69,41 @@ class SwitchView(object):
 	    
 	@app.route('/sign_in', methods=['GET','POST'])
 	def sign_in():
-	    now = datetime.datetime.now()
-	    day = str(now)[0:11]
-	    SwitchView.login_staff = 'no staff'
-	    home_url = 'no url'
-	    if request.method == 'POST':
-		    login_id = request.form['login_id']
-		    password = request.form['password']
-		    print(login_id)
-		    print(password)
-		    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-		    cursor.execute('''
-			    SELECT * FROM staff
-			    WHERE 
-			    login_id = '%s'
-		    ''' % (login_id))
-		    auth_staff = cursor.fetchone()
-		    if bcrypt.check_password_hash(auth_staff[3],password):
-			    SwitchView.login_staff = auth_staff
-			    print('login')
-			    home_url = request.host_url  + '/' + day + '/-1/all_record'
+	    try:
+		    now = datetime.datetime.now()
+		    day = str(now)[0:11]
+		    SwitchView.login_staff = 'no staff'
+		    home_url = 'no url'
+		    if request.method == 'POST':
+			    login_id = request.form['login_id']
+			    password = request.form['password']
+			    print(login_id)
+			    print(password)
+			    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+			    cursor.execute('''
+				    SELECT * FROM staff
+				    WHERE 
+				    login_id = '%s'
+			    ''' % (login_id))
+			    auth_staff = cursor.fetchone()
+			    if bcrypt.check_password_hash(auth_staff[3],password):
+				    SwitchView.login_staff = auth_staff
+				    print('login')
+				    home_url = request.host_url  + '/' + day + '/-1/all_record'
+			    else:
+				    print('no staff')
+				    home_url = 'no url'
+		    print('login_staff: ' + SwitchView.login_staff[1])
+	    except MySQLdb.OperationalError as e:
+		    if e.args[0] == 2013:
+			    #トランザクションが開始されている場合、ロールバックする
+			    #connection.rollback()
+			    # 接続を閉じ
+			    connection.close()
+			    #再接続
+			    connection.cursor()
 		    else:
-			    print('no staff')
-			    home_url = 'no url'
-	    print('login_staff: ' + SwitchView.login_staff[1])
+			    raise e
 	    return render_template('sign_in.html',home_url=home_url,auth_staff=SwitchView.login_staff)
 			    
 			    
