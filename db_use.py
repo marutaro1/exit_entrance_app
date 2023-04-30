@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import subprocess
 import datetime
 import time
 import MySQLdb
@@ -44,6 +45,7 @@ connection = MySQLdb.connect(
 	charset='utf8'
 	)
 cursor = connection.cursor()
+cursor.execute('set global wait_timeout=86400')
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
@@ -181,20 +183,12 @@ class SwitchDB(object):
 		    connection.commit()
 					    
 	    except MySQLdb.OperationalError as e:
-		    if e.args[0] == 2006:
-			    # トランザクションが開始されている場合、ロールバックする
-			    #connection.rollback()
-			    # 接続を閉じ
-			    connection.close()
-			    #再接続
-			    cursor = connection.cursor()
-		    else:
-			    raise e
+		    print(e)
 
 switch_db = SwitchDB()
 while True:
     try:
-	    response = requests.get('http://192.168.0.7/sign_in')#ネットワーク確認用
+	    response = requests.get('http://192.168.0.31')#ネットワーク確認用
 	    switch_db.mb('no')
     
     except requests.exceptions.ConnectionError as e:
