@@ -1,6 +1,7 @@
 import binascii
 import nfc
 import os
+import sys
 import MySQLdb
 
 import requests
@@ -9,6 +10,7 @@ import datetime
 import time
 
 import timeout_decorator
+import motor
 
 load_dotenv()
 
@@ -22,6 +24,7 @@ connection = MySQLdb.connect(
 	charset='utf8'
 	)
 cursor = connection.cursor()
+switch_motor = motor.ServoMotor()
 
 class MyCardReader(object):
     def __init__(self):
@@ -35,19 +38,22 @@ class MyCardReader(object):
     def on_connect(self, tag):
         now = datetime.datetime.now()
         elapsed_time = (now - self.last_time).total_seconds()
-        if elapsed_time < 1 and self.idm_data == binascii.hexlify(tag._nfcid):
+        print('test date: ' + str(elapsed_time))
+        if elapsed_time < 5.0 and self.idm_data == str(binascii.hexlify(tag._nfcid))[2:-1]:
             # 1秒以内に同じカードを読み込んでいたら、何もしない
+            print('test')
             return
-       
-        self.now_format = str(now)[:-7]
-        #タグ情報を全て表示
-        #print(tag)
-        #IDmのみ取得して表示
-        idm = binascii.hexlify(tag._nfcid)
-        self.idm_data = str(idm)[2:-1]
-        self.add_record_database()
-        
-        #self.idm_data = self.idm
+        else:
+            print('else')
+            self.now_format = str(now)[:-7]
+            #タグ情報を全て表示
+            #print(tag)
+            #IDmのみ取得して表示
+            switch_motor.move_to_position(30)
+            idm = binascii.hexlify(tag._nfcid)
+            self.idm_data = str(idm)[2:-1]
+            self.add_record_database()
+            self.last_time = datetime.datetime.now()
         
     def add_record_database(self):
         cursor.execute("INSERT INTO card_record(datetime,type,idm) values('%s','%s','%s')" % (self.now_format,self.card_type,self.idm_data))
@@ -55,7 +61,6 @@ class MyCardReader(object):
         
     def read_id(self):
         try:
-                self.card_type = 'go'
                 print('start')
                 clf = nfc.ContactlessFrontend('usb')
                 try:

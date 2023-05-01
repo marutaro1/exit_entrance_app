@@ -18,19 +18,14 @@ class ServoMotor:
         self.p.start(0.0)
 
         # -90°の位置へ移動
-        self.p.ChangeDutyCycle(2.5)
+        self.p.ChangeDutyCycle(9.0)
         time.sleep(1.0)
+        #-90°の位置へ移動
+        self.p.ChangeDutyCycle(2.5)
 
-        # 少しずつ回転
-        for d in range(-90, degree + 1):
-            dc = 2.5 + (12.0 - 2.5) / 180 * (d + 90)
-            self.p.ChangeDutyCycle(dc)
-            time.sleep(0.03)
-            self.p.ChangeDutyCycle(0.0)  # 一旦DutyCycle 0%にする
-
-
-#motor = ServoMotor()
-#while True:
-#	m = input('motor')
-#	if m == 'motor':
-#		motor.move_to_position(30)
+"""
+motor = ServoMotor()
+print('move')
+motor.move_to_position(30)
+print('move end')
+"""

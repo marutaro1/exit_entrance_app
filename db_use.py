@@ -8,7 +8,6 @@ import nfc
 import timeout_decorator
 import requests
 import nfc_reader
-import motor
 
 from transitions import Machine
 import csv
@@ -17,7 +16,6 @@ import switch_app
 load_dotenv()
 
 start_time = datetime.datetime.now()
-switch_motor = motor.ServoMotor()
 cr = nfc_reader.MyCardReader()
 print(cr.card_type)
 
@@ -61,6 +59,7 @@ class SwitchDB(object):
 	    self.page_value = cr.card_type
 	    self.idm = ''
 	    self.backup = []
+	    self.check_record_time = ''
 	    
 	#日時、名前、詳細をslackに通知させる
 	def notification(day,time,name,nb):
@@ -122,25 +121,34 @@ class SwitchDB(object):
 	
 	##goかreturnかの信号を受け取り、door_recordを登録する
 	def add_door_record(event):
+	    check_time = event.kwargs.get('check_time')
 	    resident_id = event.kwargs.get('resident_id')
 	    resident_nb = "'" + event.kwargs.get('resident_nb') + "'"
 	    page_value = event.kwargs.get('page_value')
 	    day = event.kwargs.get('day')
 	    time = event.kwargs.get('time')
-	    door_state = ['exit_day','exit_time']
-	    judgment = event.kwargs.get('judgment')
-	    if page_value == 'return':
-		    door_state = ['entrance_day','entrance_time']
-		    day_record = SwitchDB.select_door_record("'" + day + "'",resident_id)
-		    print(day_record)
-		    if day_record is not None and day_record[3] is None:
-			    print('return update')
-			    cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb=%s where exit_day = %s and exit_time <= %s and resident_id = %s order by exit_time desc limit 1",(day,time,resident_nb,day,time,resident_id))
-			    connection.commit()
-			    return
-	    print('puls add')
-	    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb,error_judgment) values (%s,%s,%s,%s,'%s')" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb,judgment))
-	    connection.commit()
+	    cursor.execute("SELECT * FROM door_record ORDER BY id DESC")
+	    last_data = cursor.fetchone()
+	    
+	    print(str(last_data[2]) + ' ' + str(last_data[3]))
+	    print(check_time)
+	    if (str(last_data[2]) + ' ' + str(last_data[3])) != str(check_time):
+		    print('log True')
+		    door_state = ['exit_day','exit_time']
+		    judgment = event.kwargs.get('judgment')
+		    if page_value == 'return':
+			    door_state = ['entrance_day','entrance_time']
+			    day_record = SwitchDB.select_door_record("'" + day + "'",resident_id)
+			    print(day_record)
+			    if day_record is not None and day_record[3] is None:
+				    print('return update')
+				    cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb=%s where exit_day = %s and exit_time <= %s and resident_id = %s order by exit_time desc limit 1",(day,time,resident_nb,day,time,resident_id))
+				    connection.commit()
+				    return
+		    print('puls add')
+		    cursor.execute(f"insert into door_record (resident_id,%s,%s,nb,error_judgment) values (%s,%s,%s,%s,'%s')" % (door_state[0],door_state[1],resident_id,"'" + day + "'","'" + time + "'",resident_nb,judgment))
+		    connection.commit()
+		    SwitchDB.check_record_time = check_time
 	     
 	def csv_migrate(self):
 	     cursor.execute("""
@@ -171,13 +179,12 @@ class SwitchDB(object):
 			    print('pass')
 			    return
 		    
-		    switch_motor.move_to_position(30)
 		    print('switch')
 		    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 		    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 		    auto_transitions=False, ordered_transitions=False,send_event=True)
 		    SwitchDB.trigger(self.page_value)
-		    SwitchDB.trigger(self.state,resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19],judgment=judgment)
+		    SwitchDB.trigger(self.state,check_time=new_record[3],resident_id=new_record[0],resident_nb=new_record[2],page_value=self.page_value,day=str(new_record[3])[0:11],time=str(new_record[3])[11:19],judgment=judgment)
 		    SwitchDB.notification(str(new_record[3])[0:11],str(new_record[3])[11:19],new_record[0],new_record[2]) 
 		    print('error: ' + cr.error_judgment)
 		    connection.commit()
