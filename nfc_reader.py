@@ -40,7 +40,7 @@ class MyCardReader(object):
         elapsed_time = (now - self.last_time).total_seconds()
         print('test date: ' + str(elapsed_time))
         if elapsed_time < 5.0 and self.idm_data == str(binascii.hexlify(tag._nfcid))[2:-1]:
-            # 1秒以内に同じカードを読み込んでいたら、何もしない
+            # 5秒以内に同じカードを読み込んでいたら、何もしない
             print('test')
             return
         else:
