@@ -133,9 +133,11 @@ class SwitchDB(object):
 	    cursor.execute("SELECT * FROM door_record ORDER BY id DESC")
 	    last_data = cursor.fetchone()
 	    resident = SwitchDB.select_resident(resident_id)
-	    print(str(last_data[2]) + ' ' + str(last_data[3]))
+	    time_obj = datetime.datetime.strptime(str(last_data[3]), '%H:%M:%S')
+	    last_data_time = time_obj.strftime('%H:%M:%S')
+	    print(str(last_data[2]) + ' ' + last_data_time)
 	    print(check_time)
-	    if (str(last_data[2]) + ' ' + str(last_data[3])) != str(check_time):
+	    if (str(last_data[2]) + ' ' + last_data_time) != str(check_time):
 		    print('log True')
 		    door_state = ['exit_day','exit_time']
 		    judgment = event.kwargs.get('judgment')
