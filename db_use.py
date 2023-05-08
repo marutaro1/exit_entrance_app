@@ -182,8 +182,6 @@ class SwitchDB(object):
 		    self.idm = cr.idm_data
 		    print('new_record')
 		    new_record = self.select_card_record(day,cr)
-		    print(new_record)
-		    print(new_record[3])
 		    
 		    if new_record is not None and cr.motor_run == 'ok':
 			    switch_motor.move_to_position(30)
@@ -210,9 +208,8 @@ while True:
 	    
 	    switch_db.mb('no')
 	    new_record = switch_db.select_card_record(switch_db.day,cr)
-	    print(new_record)
-	    print(new_record[3])
-	    if switch_db.page_value == 'go':
+	    
+	    if new_record is not None and switch_db.page_value == 'go':
 		    cursor.execute(f"UPDATE door_record SET exit_time = '%s' ORDER BY exit_time DESC LIMIT 1" % (str(new_record[3])[11:19]))
 		    connection.commit()
 	   
