@@ -47,7 +47,7 @@ connection = MySQLdb.connect(
 	charset='utf8',
 )
 cursor = connection.cursor()
-
+cursor.execute('set global wait_timeout=86400')
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
