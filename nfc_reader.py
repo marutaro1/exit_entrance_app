@@ -10,7 +10,7 @@ import datetime
 import time
 
 import timeout_decorator
-import motor
+
 
 load_dotenv()
 
@@ -24,7 +24,7 @@ connection = MySQLdb.connect(
 	charset='utf8'
 	)
 cursor = connection.cursor()
-switch_motor = motor.ServoMotor()
+
 
 class MyCardReader(object):
     def __init__(self):
@@ -34,6 +34,7 @@ class MyCardReader(object):
             self.now_format = ''
             self.last_time = datetime.datetime.now()
             self.error_judgment = ''
+            self.motor_run = ''
             
     def on_connect(self, tag):
         now = datetime.datetime.now()
@@ -42,6 +43,7 @@ class MyCardReader(object):
         if elapsed_time < 5.0 and self.idm_data == str(binascii.hexlify(tag._nfcid))[2:-1]:
             # 5秒以内に同じカードを読み込んでいたら、何もしない
             print('test')
+            self.motor_run = 'no'
             return
         else:
             print('else')
@@ -49,7 +51,7 @@ class MyCardReader(object):
             #タグ情報を全て表示
             #print(tag)
             #IDmのみ取得して表示
-            switch_motor.move_to_position(30)
+            self.motor_run = 'ok'
             idm = binascii.hexlify(tag._nfcid)
             self.idm_data = str(idm)[2:-1]
             self.add_record_database()

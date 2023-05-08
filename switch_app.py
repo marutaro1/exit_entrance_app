@@ -37,11 +37,10 @@ json_data = {
     }
 
 
-container_ip = os.environ['CONTAINER_ID']
 
 #db接続
 connection = MySQLdb.connect(
-	host=container_ip,
+	host=os.environ['CONTAINER_ID']
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
@@ -95,15 +94,7 @@ class SwitchView(object):
 				    home_url = 'no url'
 		    print('login_staff: ' + SwitchView.login_staff[1])
 	    except MySQLdb.OperationalError as e:
-		    if e.args[0] == 2013:
-			    #トランザクションが開始されている場合、ロールバックする
-			    #connection.rollback()
-			    # 接続を閉じ
-			    connection.close()
-			    #再接続
-			    connection.cursor()
-		    else:
-			    raise e
+		    print(e)
 	    return render_template('sign_in.html',home_url=home_url,auth_staff=SwitchView.login_staff)
 			    
 			    
@@ -369,15 +360,7 @@ class SwitchView(object):
 		    print('ProgramingError')
 		
 	    except MySQLdb.OperationalError as e:
-		    if e.args[0] == 2006:
-			    # トランザクションが開始されている場合、ロールバックする
-			    connection.rollback()
-			    # 接続を閉じ
-			    connection.close()
-			    #再接続
-			    cursor = connection.cursor()
-		    else:
-			    return e
+		    print(e)
 	    return render_template('index.html', auth_staff=SwitchView.login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
 	
 	def post_resident(self,name,number,room_number,going_to_alone,card_id):
@@ -441,15 +424,7 @@ class SwitchView(object):
 			    url_after=SwitchView.url_after_create
 			    SwitchView.restart_db_use()
 	    except MySQLdb.OperationalError as e:
-		    if e.args[0] == 2006:
-			    # トランザクションが開始されている場合、ロールバックする
-			    connection.rollback()
-			    # 接続を閉じ
-			    connection.close()
-			    #再接続
-			    cursor = connection.cursor()
-		    else:
-			    return e
+		    print(e)
 	    
 	    return render_template('create.html',auth_staff=SwitchView.login_staff, url_after_create=url_after)
 	    
@@ -479,15 +454,7 @@ class SwitchView(object):
 			    url_after = 'no url'
 		    
 	    except MySQLdb.OperationalError as e:
-		    if e.args[0] == 2006:
-			    # トランザクションが開始されている場合、ロールバックする
-			    connection.rollback()
-			    # 接続を閉じ
-			    connection.close()
-			    #再接続
-			    cursor = connection.cursor()
-		    else:
-			    return e
+		    print(e)
 
 	    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents,url_after_update=url_after)
 

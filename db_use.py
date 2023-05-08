@@ -8,6 +8,7 @@ import nfc
 import timeout_decorator
 import requests
 import nfc_reader
+import motor
 
 from transitions import Machine
 import csv
@@ -32,11 +33,10 @@ json_data = {
     'commandType': 'command',
     }
     
-container_ip = os.environ['CONTAINER_ID']
 
 #db接続
 connection = MySQLdb.connect(
-	host=container_ip,
+	host=os.environ['CONTAINER_ID'],
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
@@ -44,6 +44,8 @@ connection = MySQLdb.connect(
 	)
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
+
+switch_motor = motor.ServoMotor()
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
@@ -103,6 +105,8 @@ class SwitchDB(object):
 			     card_record.idm = '%s'
 			     ORDER BY card_record.datetime DESC
 			     """ % ('一人外出可%',day + '%',self.page_value,cr.idm_data))
+	    if cursor.fetchone() is not None and cr.motor_run == 'ok':
+		    switch_motor.move_to_position(30)
 	    return cursor.fetchone()
 	    
 	#日付とresident_idが一致するdoor_recordの最新のデータを一つ呼び出す
