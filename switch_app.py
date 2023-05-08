@@ -407,7 +407,7 @@ class SwitchView(object):
 	
 	def restart_db_use():
 		process_name = "db_use.py"
-		process = subprocess.Popen(["lxterminal","-e","python3", process_name])
+		process = subprocess.Popen(["python3", process_name])
 		
 
 	@app.route('/create', methods=['GET','POST'])
