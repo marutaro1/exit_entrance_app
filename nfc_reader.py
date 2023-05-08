@@ -24,7 +24,7 @@ connection = MySQLdb.connect(
 	charset='utf8'
 	)
 cursor = connection.cursor()
-
+cursor.execute('set global wait_timeout=86400')
 
 class MyCardReader(object):
     def __init__(self):
