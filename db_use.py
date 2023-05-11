@@ -45,6 +45,8 @@ connection = MySQLdb.connect(
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
+switch_motor = motor.ServoMotor()
+
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
 	{'trigger':'go','source':'go', 'dest':'go_record'},#goの信号を受け取る
@@ -81,31 +83,29 @@ class SwitchDB(object):
 	    
 	#idを選択し、card_recordとresidentを合わせて一致する最新のデータを1つ呼び出す
 	def select_card_record(self,day,cr):
-	    print('add_door')
 	    cursor.execute("""SELECT
-			     resident.id,
-			     resident.name,
-			     resident.going_to_alone,
-			     card_record.datetime,
-			     card_record.type,
-			     card_record.idm
-			     FROM 
-			     resident 
-			     INNER JOIN 
-			     card_record 
-			     ON
-			     resident.card_id = card_record.idm
-			     WHERE
-			     resident.going_to_alone like '%s'
-			     AND
-			     card_record.datetime like '%s'
-			     AND
-			     card_record.type = '%s'
-			     AND
-			     card_record.idm = '%s'
-			     ORDER BY card_record.datetime DESC
-			     """ % ('一人外出可%',day + '%',self.page_value,cr.idm_data))
-	    print('card_record')
+				 resident.id,
+				 resident.name,
+				 resident.going_to_alone,
+				 card_record.datetime,
+				 card_record.type,
+				 card_record.idm
+				 FROM 
+				 resident 
+				 INNER JOIN 
+				 card_record 
+				 ON
+				 resident.card_id = card_record.idm
+				 WHERE
+				 resident.going_to_alone like '%s'
+				 AND
+				 card_record.datetime like '%s'
+				 AND
+				 card_record.type = '%s'
+				 AND
+				 card_record.idm = '%s'
+				 ORDER BY card_record.datetime DESC
+			    """ % ('一人外出可%',day + '%',cr.card_type,cr.idm_data))
 	    card_record = cursor.fetchone()
 	    print(card_record)
 	    return card_record
@@ -140,16 +140,17 @@ class SwitchDB(object):
 	    print('time' + time)
 	    resident = SwitchDB.select_resident(resident_id)
 	    
-	    print('log True')
 	    door_state = ['exit_day','exit_time']
 	    judgment = event.kwargs.get('judgment')
+	    print('page_value: ' + page_value)
 	    if page_value == 'return':
 		    door_state = ['entrance_day','entrance_time']
 		    day_record = SwitchDB.select_door_record(day,resident_id)
 		    print(day_record)
 		    if day_record is not None and day_record[3] is None:
 			    print('return update')
-			    cursor.execute(f"update door_record set entrance_day=%s,entrance_time=%s,nb='%s' where exit_day = %s and exit_time <= %s and resident_id = %s order by exit_time desc limit 1",(day,time,resident_nb,day,time,resident_id))
+			    print(f"update door_record set entrance_day=%s,entrance_time=%s,nb='%s' where exit_day = '%s' and exit_time <= '%s' and resident_id = %s order by exit_time desc limit 1" % (day,time,resident_nb,day,time,resident_id))
+			    cursor.execute(f"update door_record set entrance_day='%s',entrance_time='%s',nb='%s' where exit_day = '%s' and exit_time <= '%s' and resident_id = %s order by exit_time desc limit 1" % (day,time,resident_nb,day,time,resident_id))
 			    connection.commit()
 			    return
 	    print('puls add')
@@ -177,16 +178,15 @@ class SwitchDB(object):
 	    try:
 		    cr.error_judgment = judgment
 		    now = datetime.datetime.now()
-		    day = str(now)[0:11]
+		    day = str(now)[0:10]
 		    print(cr.card_data())
 		    self.idm = cr.idm_data
-		    print('new_record')
+		    print(cr.card_type)
+		   
 		    new_record = self.select_card_record(day,cr)
-		    
-		    if new_record is not None and cr.motor_run == 'ok':
-			    switch_motor.move_to_position(30)
-			    
-			    print('switch')
+		    if new_record is not None and cr.motor_run == 'ok' and  '一人外出可能' in new_record[2]:
+			    if new_record[4] == 'go':
+				    switch_motor.move_to_position(30)
 			    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 			    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 			    auto_transitions=False, ordered_transitions=False,send_event=True)
