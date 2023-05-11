@@ -24,13 +24,13 @@ connection = MySQLdb.connect(
 	charset='utf8'
 	)
 cursor = connection.cursor()
-cursor.execute('set global wait_timeout=86400')
+
 
 class MyCardReader(object):
     def __init__(self):
             self.idm_data = ''
             #self.card_type = input('go or return')
-            self.card_type = 'go'
+            self.card_type = 'return'
             self.now_format = ''
             self.last_time = datetime.datetime.now()
             self.error_judgment = ''
@@ -39,10 +39,10 @@ class MyCardReader(object):
     def on_connect(self, tag):
         now = datetime.datetime.now()
         elapsed_time = (now - self.last_time).total_seconds()
-        print('test date: ' + str(elapsed_time))
+        print('time: ' + str(elapsed_time))
         if elapsed_time < 5.0 and self.idm_data == str(binascii.hexlify(tag._nfcid))[2:-1]:
             # 5秒以内に同じカードを読み込んでいたら、何もしない
-            print('test')
+            print('timesleep')
             self.motor_run = 'no'
             return
         else:
@@ -51,15 +51,13 @@ class MyCardReader(object):
             #タグ情報を全て表示
             #print(tag)
             #IDmのみ取得して表示
-           
+            self.motor_run = 'ok'
             idm = binascii.hexlify(tag._nfcid)
             self.idm_data = str(idm)[2:-1]
             self.add_record_database()
-            
             self.last_time = datetime.datetime.now()
         
     def add_record_database(self):
-        self.motor_run = 'ok'
         cursor.execute("INSERT INTO card_record(datetime,type,idm) values('%s','%s','%s')" % (self.now_format,self.card_type,self.idm_data))
         connection.commit()
         
