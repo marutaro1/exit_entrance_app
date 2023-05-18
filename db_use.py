@@ -8,8 +8,9 @@ import nfc
 import timeout_decorator
 import requests
 import nfc_reader
-import motor
 
+import serch_return
+import use_motor
 from transitions import Machine
 import csv
 import switch_app
@@ -18,6 +19,7 @@ load_dotenv()
 
 start_time = datetime.datetime.now()
 cr = nfc_reader.MyCardReader()
+return_switch = serch_return.SerchReturn()
 print(cr.card_type)
 
 
@@ -45,7 +47,7 @@ connection = MySQLdb.connect(
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
-switch_motor = motor.ServoMotor()
+
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
 transitions = [
@@ -63,6 +65,7 @@ class SwitchDB(object):
 	    self.page_value = cr.card_type
 	    self.idm = ''
 	    self.backup = []
+	    self.serch_return = ''
 	    
 	#日時、名前、詳細をslackに通知させる
 	def notification(day,time,name,nb):
@@ -184,9 +187,13 @@ class SwitchDB(object):
 		    print(cr.card_type)
 		   
 		    new_record = self.select_card_record(day,cr)
+		    print('new_record + serch_return')
+		    print(new_record)
+		    print(return_switch.serch_return)
 		    if new_record is not None and cr.motor_run == 'ok' and  '一人外出可能' in new_record[2]:
-			    if new_record[4] == 'go':
-				    switch_motor.move_to_position(30)
+			    if new_record[4] == 'go' or return_switch.serch_return == new_record:
+				    
+				    use_motor.move()
 			    #response = requests.post('https://api.switch-bot.com/v1.0/devices/FA9364B2BC98/commands',headers=headers,json=json_data)
 			    machine = Machine(model=SwitchDB, states=states, transitions=transitions, initial=self.page_value,
 			    auto_transitions=False, ordered_transitions=False,send_event=True)
@@ -203,13 +210,20 @@ class SwitchDB(object):
 switch_db = SwitchDB()
 while True:
     try:
+	    print('try')
+	    print(return_switch.serch_return)
 	    response = ''
 	    #requests.get('http://192.168.0.31')#ネットワーク確認用
 	    
 	    switch_db.mb('no')
 	    new_record = switch_db.select_card_record(switch_db.day,cr)
-	    
+	    open_time = ''
 	    if new_record is not None and switch_db.page_value == 'go':
+		    open_time = 'exit_time'
+	    elif new_record is not None and switch_db.page_value == 'return':
+		    
+		    open_time = 'entrance_time'
+	    if new_record is not None:
 		    cursor.execute(f"UPDATE door_record SET exit_time = '%s' ORDER BY exit_time DESC LIMIT 1" % (str(new_record[3])[11:19]))
 		    connection.commit()
 	   
