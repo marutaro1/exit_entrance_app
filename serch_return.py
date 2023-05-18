@@ -1,4 +1,3 @@
-
 import os
 from dotenv import load_dotenv
 import subprocess
@@ -6,11 +5,13 @@ import datetime
 import time
 import MySQLdb
 import nfc_reader
+import use_motor
+
 load_dotenv()
-import motor
 
 start_time = datetime.datetime.now()
 cr = nfc_reader.MyCardReader()
+
 #db接続
 connection = MySQLdb.connect(
 	host=os.environ['CONTAINER_ID'],
@@ -22,13 +23,17 @@ connection = MySQLdb.connect(
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
-switch_motor = motor.ServoMotor()
+class SerchReturn(object):
+	def __init__(self):
+		self.serch_return = ''
 
-if __name__ == '__main__':
-	cursor.execute("SELECT * FROM card_record WHERE type = 'return' ORDER BY id DESC LIMIT 1")
-	last_data = cursor.fetchone()
-	last_id = last_data[0]
-	last_time = last_data[1]
+switch_motor = SerchReturn()
+
+cursor.execute("SELECT * FROM card_record WHERE type = 'return' ORDER BY id DESC LIMIT 1")
+last_data = cursor.fetchone()
+last_id = last_data[0]
+last_time = last_data[1]
+if __name__ == "__main__":
 	while True:
 		print('serch now...')
 		cursor.execute("SELECT * FROM card_record WHERE type = 'return' ORDER BY id DESC LIMIT 1")
@@ -43,7 +48,12 @@ if __name__ == '__main__':
 			last_id = current_id
 			if '一人外出可能' in resident[4]:
 				print('MOVE')
-				switch_motor.move_to_position(30)
+				print(current_data)
+				
+				use_motor.move()
+				
+				
+
 		time.sleep(1)
 		connection.close()
 		connection = MySQLdb.connect(
