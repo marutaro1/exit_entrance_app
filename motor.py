@@ -23,9 +23,5 @@ class ServoMotor:
         #-90°の位置へ移動
         self.p.ChangeDutyCycle(2.5)
 
-"""
 motor = ServoMotor()
-print('move')
 motor.move_to_position(30)
-print('move end')
-"""
