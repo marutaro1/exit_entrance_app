@@ -1,11 +1,11 @@
 import os
 import sys
 import subprocess
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, redirect, url_for
 from flask_paginate import Pagination, get_page_parameter
 from dotenv import load_dotenv
 import datetime
-
+import time
 import nfc
 import requests
 import MySQLdb
@@ -40,7 +40,7 @@ json_data = {
 
 #db接続
 connection = MySQLdb.connect(
-	host=os.environ['CONTAINER_ID']
+	host=os.environ['CONTAINER_ID'],
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
@@ -57,6 +57,8 @@ transitions = [
 	{'trigger':'return_record','source':'return_record', 'dest':'post_return_record','after':'insert_door'},#returnの信号を受け取り、updateかpostかを識別し登録する
 	]
 
+auth_array = []
+post_data = []
 
 class SwitchView(object):
 	def __init__(self):
@@ -66,12 +68,25 @@ class SwitchView(object):
 	    self.url_after_update = 'no_url'
 	    self.login_staff = 'no staff'
 	    
+	def all_staff_id(staff_id):
+	    cursor.execute('SELECT id FROM staff')
+	    all_staff = tuple(item[0] for item in (cursor.fetchall()))
+	    print(all_staff)
+	    if int(staff_id) in all_staff:
+		    return True
+	
+	def serch_staff(staff_id):
+	    cursor.execute('SELECT * FROM staff WHERE id = %s' % (staff_id))
+	    serch_staff_data = cursor.fetchone()
+	    print(auth_array)
+	    return serch_staff_data
+	
 	@app.route('/sign_in', methods=['GET','POST'])
 	def sign_in():
 	    try:
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
-		    SwitchView.login_staff = 'no staff'
+		    #SwitchView.login_staff = 'no staff'
 		    home_url = 'no url'
 		    if request.method == 'POST':
 			    login_id = request.form['login_id']
@@ -86,33 +101,42 @@ class SwitchView(object):
 			    ''' % (login_id))
 			    auth_staff = cursor.fetchone()
 			    if bcrypt.check_password_hash(auth_staff[3],password):
-				    SwitchView.login_staff = auth_staff
+				    #SwitchView.login_staff = auth_staff
 				    print('login')
 				    home_url = request.host_url  + '/' + day + '/-1/all_record'
+				    login_staff = SwitchView.serch_staff(auth_staff[0])
+				    print('staff_id')
+				    print(auth_staff[0])
+				    auth_array.append(auth_staff[0])
+				    print(auth_array)
+				    return redirect(url_for('return_view',staff_id=auth_staff[0],login_staff=login_staff,page_value=day,resident_id='-1',return_check='all_record'))
 			    else:
 				    print('no staff')
 				    home_url = 'no url'
-		    print('login_staff: ' + SwitchView.login_staff[1])
 	    except MySQLdb.OperationalError as e:
 		    print(e)
-	    return render_template('sign_in.html',home_url=home_url,auth_staff=SwitchView.login_staff)
+	    return render_template('sign_in.html')
 			    
 			    
-	@app.route('/sign_up', methods=['GET','POST'])
-	def sign_up():
-	    if request.method == 'POST':
+	@app.route('/<int:staff_id>/sign_up', methods=['GET','POST'])
+	def sign_up(staff_id):
+	    login_staff = SwitchView.serch_staff(staff_id)
+	    if staff_id not in auth_array:
+		    return redirect(url_for('sign_in'))
+	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST':
 		    name = request.form['name']
 		    login_id = request.form['login_id']
 		    password = request.form['password']
 		    authority = request.form['authority']
 		    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 		    print(bcrypt.check_password_hash(hashed_password, password))
+		    
 		    cursor.execute('''
 			    INSERT INTO staff(name,login_id,password,authority)
 			    VALUE('%s','%s','%s',%s)
 		    ''' % (name,login_id,hashed_password,authority))
 		    connection.commit()
-	    return render_template('sign_up.html',auth_staff=SwitchView.login_staff)
+	    return render_template('sign_up.html',staff_id=staff_id,login_staff=login_staff)
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
 	def select_resident_nb_value(resident):
@@ -319,9 +343,11 @@ class SwitchView(object):
 	    SwitchView.post_door_record(day,time,resident_nb[0],page_value,door_time,resident_nb[1])
 	    
 	
-	@app.route('/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
-	def return_view(page_value,resident_id,return_check):
+	@app.route('/<int:staff_id>/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
+	def return_view(staff_id,page_value,resident_id,return_check):
 	    try:
+		    if int(staff_id) not in auth_array:
+			    return redirect(url_for('sign_in'))
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
 		    time = str(now)[11:19]
@@ -334,7 +360,7 @@ class SwitchView(object):
 		    door_record = SwitchView.door_record_value(page_value)
 		    method_value = request.method
 		    print(request.url)
-		    if request.method == 'POST':
+		    if SwitchView.all_staff_id(staff_id) and request.method == 'POST':
 			    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
 			    if door_record is None or str(request.form['door_time']) != str(door_record[3]):
 				    SwitchView.select_state = request.form.get('go_out')
@@ -351,6 +377,7 @@ class SwitchView(object):
 				    day_value = page_value
 				    today = SwitchView.serch_today_value(page_value,resident_id,return_check)
 		    
+		    login_staff = SwitchView.serch_staff(staff_id)
 		    page = request.args.get(get_page_parameter(), type=int, default=1)
 		    limit = today[(page -1)*10:page*10]
 		    pagination = Pagination(page=page, total=len(today))
@@ -361,11 +388,13 @@ class SwitchView(object):
 		
 	    except MySQLdb.OperationalError as e:
 		    print(e)
-	    return render_template('index.html', auth_staff=SwitchView.login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
+	    return render_template('index.html', staff_id=staff_id,login_staff=login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
 	
 	def post_resident(self,name,number,room_number,going_to_alone,card_id):
 	    try:
 		    
+		    if staff_id in SwitchView.auth_array:
+			    return redirect(url_for('sign_in'))
 		    self.url_after_create = 'no url'
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
@@ -377,10 +406,10 @@ class SwitchView(object):
 		    ('%s',%s,%s,'%s','%s')
 		    """ % (name,int(number),int(room_number),going_to_alone,card_id))
 		    connection.commit()
-		    self.url_after_create = request.host_url + '/' + day + '/-1/all_record'
+		    self.url_after_create = request.host_url +'/' + str(staff_id) + '/' + day + '/-1/all_record'
 	    except ValueError:
 		    print('ValueError')
-		    self.url_after_create = request.host_url + '/create'
+		    self.url_after_create = request.host_url + '/' + str(staff_id) + '/create'
 	    print(self.url_after_create)
 	
 	def post_update_resident(self,resident_id,name,number,room_number,going_to_alone,card_id):
@@ -394,10 +423,10 @@ class SwitchView(object):
 		    WHERE id = %s
 		    """ % (name,int(number),int(room_number),going_to_alone,card_id,resident_id))
 		    connection.commit()
-		    self.url_after_update = request.host_url  + '/' + day + '/-1/all_record'
+		    self.url_after_update = request.host_url +'/' + str(staff_id) + '/' + day + '/-1/all_record'
 	    except ValueError:
 		    print('ValueError')
-		    self.url_after_update = request.host_url + '/update'
+		    self.url_after_update = request.host_url + '/' + str(staff_id) + '/update'
 	    print(self.url_after_update)
 	    
 	def kill_db_use():
@@ -410,54 +439,96 @@ class SwitchView(object):
 		process = subprocess.Popen(["python3", process_name])
 		
 
-	@app.route('/create', methods=['GET','POST'])
-	def new_resident_create():
+	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
+	def new_resident_create(staff_id):
 	    try:
+		    if staff_id not in auth_array:
+			    return redirect(url_for('sign_in'))
 		    url_after='no url'
-		    
 		    print(request.method)
-		    if request.method == 'POST' and request.form['new_name'] != '':
+		    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['new_name'] != '':
 			    SwitchView.kill_db_use()
 			    print(cr.card_data())
 			    print(cr.idm_data)
-			    SwitchView.post_resident(SwitchView,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
+			    SwitchView.post_resident(SwitchView,staff_id,request.form['new_name'],request.form['new_number'],request.form['new_room_number'],request.form['new_going_to_alone'],cr.idm_data)
 			    url_after=SwitchView.url_after_create
 			    SwitchView.restart_db_use()
+		    login_staff = SwitchView.serch_staff(staff_id)
+	    except UnboundLocalError:
+		    login_staff = SwitchView.serch_staff(staff_id)	    
 	    except MySQLdb.OperationalError as e:
 		    print(e)
 	    
-	    return render_template('create.html',auth_staff=SwitchView.login_staff, url_after_create=url_after)
+	    return render_template('create.html',staff_id=staff_id,login_staff=login_staff,url_after_create=url_after)
 	    
 	        
-	@app.route('/update', methods=['GET','POST'])
-	def resident_update():
+	@app.route('/<int:staff_id>/update', methods=['GET','POST'])
+	def resident_update(staff_id):
 	    try:
+		    if staff_id not in auth_array:
+			    return redirect(url_for('sign_in'))
 		    residents = SwitchView.all_residents()
-
-		    if request.method == 'POST' and request.form['name'] != '':
+		    login_staff = SwitchView.serch_staff(staff_id)
+		    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['name'] != '':
 			    if request.form['card_id'] == 'change':
 				    SwitchView.kill_db_use()
 				    cr.card_data()
 				    card_id = cr.idm_data
-				    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
+				    SwitchView.post_update_resident(SwitchView,staff_id,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
 				    url_after = SwitchView.url_after_update
 				    SwitchView.restart_db_use()
 			    elif request.form['card_id'] != 'change':
 				    print(request.form['select_resident_id'])
 				    print(request.form['name'])
-				    SwitchView.post_update_resident(SwitchView,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],request.form['card_id'])
+				    SwitchView.post_update_resident(SwitchView,staff_id,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],request.form['card_id'])
 				    url_after = SwitchView.url_after_update
 				    print(url_after)
 			    print(url_after)
-			    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents, url_after_update=url_after)
+			    return render_template('update.html',staff_id=staff_id,login_staff=login_staff,residents=residents, url_after_update=url_after)
 		    else:
 			    url_after = 'no url'
 		    
 	    except MySQLdb.OperationalError as e:
 		    print(e)
 
-	    return render_template('update.html', auth_staff=SwitchView.login_staff,residents=residents,url_after_update=url_after)
-
+	    return render_template('update.html',staff_id=staff_id,login_staff=login_staff,residents=residents,url_after_update=url_after)
+    
+    
+	@app.route('/<int:staff_id>/sign_out', methods=['GET','POST'])
+	def sign_out(staff_id):
+	    if request.method == 'POST':
+		    data = request.get_json()
+		    post_data.append(data)
+		    print('post_data')
+		    print(post_data)
+		    print('auth_array')
+		    print(auth_array)
+		    if len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
+			    print('1')
+			    print(auth_array)
+			    auth_array.remove(post_data[0])
+			    print(auth_array)
+			    post_data.clear()
+		    elif len(post_data) >= 2 and isinstance(post_data[0], str):
+			    print('post_clear')
+			    print('2')
+			    post_data.clear()
+		    elif len(post_data) >= 2:
+			    print('post_clear')
+			    print('3')
+			    post_data.clear()
+		    elif isinstance(post_data[0], int):
+			    print('post_clear')
+			    print('4')
+			    auth_array.remove(int(staff_id))
+			    post_data.clear()
+		    print(post_data)
+		    return 'page change'
+	    print(auth_array)
+	    auth_array.remove(int(staff_id))
+	    print(auth_array)
+	    return redirect(url_for('sign_in'))
+	
 	
 if __name__ == "__main__":
     app.run(port = 8000, debug=True)
