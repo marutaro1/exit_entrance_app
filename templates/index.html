@@ -2,6 +2,8 @@
 
 {% block content %}
   <div>
+      
+      <br>
       <div class="search-container">
         <div class="input-container">
           <input class="input-field" id="flask_day" type="date">
@@ -28,7 +30,7 @@
           <span class="input-highlight"></span>
         </div>
 
-        <button class="index_btn" onClick="test()"> 検索
+        <button class="index_btn" onClick="search_record()"> 検索
         </button>
       </div>
       <div class="search-container">
@@ -82,9 +84,7 @@
       </div>
         {{ pagination.links }}
   <script>
-    if('{{auth_staff}}' === 'no staff' ) {
-      window.location.href = window.location.origin + '/sign_in'
-    }
+    
     var today = new Date();
     var flask_day = new Date({{day_value|tojson}});
     
@@ -96,6 +96,7 @@
       return yyyy + '-' + mm + '-' + dd;
     }
     
+
     flask_day = make_day(flask_day)
     document.getElementById('flask_day').value = {{page_value|tojson}};
     document.getElementById('today').value = {{page_value|tojson}}
@@ -112,10 +113,58 @@
     var page_value = document.getElementById('flask_day').value
     var resident_id = document.getElementById('resident_id').value
     var return_check = document.getElementById('return_check').value
-    function test() {
-      window.location.href = window.location.origin + '/' + document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
+    function search_record() {
+      
+      window.addEventListener('beforeunload', function(event) {
+        fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+        method: 'POST', // リクエストメソッド
+        headers: {
+          'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+        },
+        body: JSON.stringify('serch_record') // リクエストボディにデータをJSON形式で指定
+        })
+        .then(response => response.json()) // レスポンスをJSON形式で解析
+        .then(data => {
+          // レスポンスデータを処理
+          console.log(data);
+        })
+        .catch(error => {
+          // エラーハンドリング
+          console.error('Error:', error);
+        });
+      });
+      
+      window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/'+ document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
     }
+    
+    // ページネーションリンクをクリックした時の処理
+    document.addEventListener('click', function(event) {
+      console.log(event.target.parentNode.tagName)
+      console.log(event.target.parentNode.tagName === 'LI')
+      // クリックされた要素がページネーションリンクであるかチェック
+      if (event.target.parentNode.tagName === 'LI') {
+        console.log('page-item')
+          fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+          method: 'POST', // リクエストメソッド
+          headers: {
+            'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+          },
+          body: JSON.stringify('page') // リクエストボディにデータをJSON形式で指定
+          })
+          .then(response => response.json()) // レスポンスをJSON形式で解析
+          .then(data => {
+            // レスポンスデータを処理
+            console.log(data);
+          })
+          .catch(error => {
+            // エラーハンドリング
+            console.error('Error:', error);
+          });
 
+      
+      }
+    });
+
+    
   </script>
   {% endblock %}
-
