@@ -4,13 +4,11 @@ import subprocess
 import datetime
 import time
 import MySQLdb
-import nfc_reader
 import use_motor
 
 load_dotenv()
 
 start_time = datetime.datetime.now()
-cr = nfc_reader.MyCardReader()
 
 #db接続
 connection = MySQLdb.connect(
