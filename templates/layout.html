@@ -40,14 +40,22 @@
 	padding: 3px;
 	background: #ffffff;
 	}
+	.hero-text p {
+	width: 15%;
+	margin-left: 2%;
+	color: #ececec;
+	}
 	
-	.hero-text .logout {
+	.hero-text a {
 	margin-right: 80%;
 	font-size: 13px;
 	height:30px;
 	width: 12%;
 	padding: 3px;
 	}
+	
+	
+	
 	
 	/* Input container */
 
@@ -198,6 +206,31 @@
 	width: 100%;
 	}
 	
+	a {
+	padding: 15px 25px;
+	border: unset;
+	border-radius: 15px;
+	color: #373636;
+	z-index: 1;
+	background: #ffffff;;
+	position: relative;
+	font-weight: 1000;
+	font-size: 17px;
+	-webkit-box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+	box-shadow: 4px 8px 19px -3px rgba(0,0,0,0.27);
+	transition: all 250ms;
+	overflow: hidden;
+	height: 50px;
+	margin-top: 17px;
+	text-decoration: none;
+	}
+
+	a:hover {
+	background-coklor: inherit;
+	color: inherit;
+	
+	}
+	
 	h2 {
 	  font-size: 30px;
 	  margin: 0;
@@ -279,14 +312,15 @@
    <div class="hero-image">
 	   
       <div class="hero-text">
-		<button class="logout" onclick="signin_url()">ログアウト</button> 
+		<a href="{{ url_for('sign_out', staff_id=staff_id) }}">ログアウト</a> 
+		<p>{{login_staff[1]}}<p>
         <h1>AdditionalSwitch</h1>
         <button onclick="index_url()">ホーム</button>
         <button onclick="create_url()">新規</button>
         <button onclick="update_url()">更新</button>
         <button onclick="signup_url()">新規職員</button>
         <template></template>
-        
+        <p id="ua"></p>
       </div>
   </div>  
   <div class="body">
@@ -305,24 +339,66 @@
     }
     page_value = make_day(today)
     
+    function checkLogout(page) {
+		  fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+			method: 'POST', // リクエストメソッド
+			headers: {
+			  'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+			},
+			body: JSON.stringify(page) // リクエストボディにデータをJSON形式で指定
+		  })
+			.then(response => response.json()) // レスポンスをJSON形式で解析
+			.then(data => {
+			  // レスポンスデータを処理
+			  console.log(data);
+			})
+			.catch(error => {
+			  // エラーハンドリング
+			  console.error('Error:', error);
+			});
+	};
     
-    function signin_url() {
-			window.location.href = window.location.origin + '/sign_in'
-	}
+    
+
     function index_url() {
-			window.location.href = window.location.origin + '/' + page_value + '/-1/all_record'
+			checkLogout('index')
+			window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/' + page_value + '/-1/all_record'
 	}
-	
 	function create_url() {
-			window.location.href = window.location.origin + '/create'
+			checkLogout('create')
+			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/create'
 	}
 	function update_url() {
-			window.location.href = window.location.origin + '/update'
+			checkLogout('update')
+			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/update'
 	}
 	function signup_url() {
-			window.location.href = window.location.origin + '/sign_up'
+			checkLogout('sign_up')
+			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/sign_up'
+			
 	}
+	
+	window.addEventListener('beforeunload', function(event) {
+		  fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+			method: 'POST', // リクエストメソッド
+			headers: {
+			  'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+			},
+			body: JSON.stringify({{staff_id|tojson}}) // リクエストボディにデータをJSON形式で指定
+		  })
+			.then(response => response.json()) // レスポンスをJSON形式で解析
+			.then(data => {
+			  // レスポンスデータを処理
+			  console.log(data);
+			})
+			.catch(error => {
+			  // エラーハンドリング
+			  console.error('Error:', error);
+			});
+		});
+	
 </script>
 </body>
 </html>
+
 
