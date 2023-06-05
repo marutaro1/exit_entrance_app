@@ -120,8 +120,14 @@ class SwitchView(object):
 			    
 	@app.route('/<int:staff_id>/sign_up', methods=['GET','POST'])
 	def sign_up(staff_id):
+	    print(request.method == 'POST')
+	    print(staff_id)
+	    print(auth_array)
+	    print(staff_id not in auth_array)
 	    login_staff = SwitchView.serch_staff(staff_id)
-	    if staff_id not in auth_array:
+	    if auth_array == []:
+		    auth_array.append(staff_id)
+	    elif staff_id not in auth_array:
 		    return redirect(url_for('sign_in'))
 	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST':
 		    name = request.form['name']
@@ -346,7 +352,9 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
 	def return_view(staff_id,page_value,resident_id,return_check):
 	    try:
-		    if int(staff_id) not in auth_array:
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif int(staff_id) not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
@@ -393,7 +401,9 @@ class SwitchView(object):
 	def post_resident(self,name,number,room_number,going_to_alone,card_id):
 	    try:
 		    
-		    if staff_id in SwitchView.auth_array:
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif staff_id in SwitchView.auth_array:
 			    return redirect(url_for('sign_in'))
 		    self.url_after_create = 'no url'
 		    now = datetime.datetime.now()
@@ -442,7 +452,9 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
 	def new_resident_create(staff_id):
 	    try:
-		    if staff_id not in auth_array:
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    url_after='no url'
 		    print(request.method)
@@ -465,7 +477,9 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/update', methods=['GET','POST'])
 	def resident_update(staff_id):
 	    try:
-		    if staff_id not in auth_array:
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    residents = SwitchView.all_residents()
 		    login_staff = SwitchView.serch_staff(staff_id)
@@ -496,37 +510,35 @@ class SwitchView(object):
     
 	@app.route('/<int:staff_id>/sign_out', methods=['GET','POST'])
 	def sign_out(staff_id):
-	    if request.method == 'POST':
-		    data = request.get_json()
-		    post_data.append(data)
-		    print('post_data')
-		    print(post_data)
-		    print('auth_array')
+	    try:
+		    if request.method == 'POST':
+			    data = request.get_json()
+			    post_data.append(data)
+			    print('post_data')
+			    print(post_data)
+			    print('auth_array')
+			    print(auth_array)
+			    if len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
+				    print('1')
+				    auth_array.remove(post_data[0])
+				    post_data.clear()
+			    elif len(post_data) >= 2 and isinstance(post_data[0], str):
+				    print('2')
+				    post_data.clear()
+			    elif len(post_data) >= 2:
+				    print('3')
+				    post_data.clear()
+			    elif isinstance(post_data[0], int):
+				    print('4')
+				    auth_array.remove(int(staff_id))
+				    post_data.clear()
+			    print(post_data)
+			    return 'page change'
 		    print(auth_array)
-		    if len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
-			    print('1')
-			    print(auth_array)
-			    auth_array.remove(post_data[0])
-			    print(auth_array)
-			    post_data.clear()
-		    elif len(post_data) >= 2 and isinstance(post_data[0], str):
-			    print('post_clear')
-			    print('2')
-			    post_data.clear()
-		    elif len(post_data) >= 2:
-			    print('post_clear')
-			    print('3')
-			    post_data.clear()
-		    elif isinstance(post_data[0], int):
-			    print('post_clear')
-			    print('4')
-			    auth_array.remove(int(staff_id))
-			    post_data.clear()
-		    print(post_data)
-		    return 'page change'
-	    print(auth_array)
-	    auth_array.remove(int(staff_id))
-	    print(auth_array)
+		    auth_array.remove(int(staff_id))
+		    print(auth_array)
+	    except  ValueError:
+		    return redirect(url_for('sign_in'))
 	    return redirect(url_for('sign_in'))
 	
 	
