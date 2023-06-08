@@ -120,28 +120,33 @@ class SwitchView(object):
 			    
 	@app.route('/<int:staff_id>/sign_up', methods=['GET','POST'])
 	def sign_up(staff_id):
-	    print(request.method == 'POST')
-	    print(staff_id)
-	    print(auth_array)
-	    print(staff_id not in auth_array)
-	    login_staff = SwitchView.serch_staff(staff_id)
-	    if auth_array == []:
-		    auth_array.append(staff_id)
-	    elif staff_id not in auth_array:
-		    return redirect(url_for('sign_in'))
-	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST':
-		    name = request.form['name']
-		    login_id = request.form['login_id']
-		    password = request.form['password']
-		    authority = request.form['authority']
-		    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-		    print(bcrypt.check_password_hash(hashed_password, password))
-		    
-		    cursor.execute('''
-			    INSERT INTO staff(name,login_id,password,authority)
-			    VALUE('%s','%s','%s',%s)
-		    ''' % (name,login_id,hashed_password,authority))
-		    connection.commit()
+	    try:
+		    print(request.method == 'POST')
+		    print(staff_id)
+		    print(auth_array)
+		    print(staff_id not in auth_array)
+		    login_staff = SwitchView.serch_staff(staff_id)
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif staff_id not in auth_array:
+			    return redirect(url_for('sign_in'))
+		    if SwitchView.all_staff_id(staff_id) and request.method == 'POST':
+			    name = request.form['name']
+			    login_id = request.form['login_id']
+			    password = request.form['password']
+			    authority = request.form['authority']
+			    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+			    print(bcrypt.check_password_hash(hashed_password, password))
+			    
+			    cursor.execute('''
+				    INSERT INTO staff(name,login_id,password,authority)
+				    VALUE('%s','%s','%s',%s)
+			    ''' % (name,login_id,hashed_password,authority))
+			    connection.commit()
+	    except UnboundLocalError:
+		    login_staff = SwitchView.serch_staff(staff_id)
+	    except MySQLdb.OperationalError as e:
+		    print(e)
 	    return render_template('sign_up.html',staff_id=staff_id,login_staff=login_staff)
 	
 	#residentの文字列をidとgoing_to_aloneに分ける
@@ -391,6 +396,8 @@ class SwitchView(object):
 		    pagination = Pagination(page=page, total=len(today))
 		    connection.commit()
 		    
+	    except UnboundLocalError:
+		    login_staff = SwitchView.serch_staff(staff_id)
 	    except MySQLdb.ProgrammingError:
 		    print('ProgramingError')
 		
@@ -398,12 +405,11 @@ class SwitchView(object):
 		    print(e)
 	    return render_template('index.html', staff_id=staff_id,login_staff=login_staff,residents=residents, today=limit, day_value=day, local_time=time, pagination=pagination, page=page, page_value=page_value, resident_data=resident_id, return_check=return_check)
 	
-	def post_resident(self,name,number,room_number,going_to_alone,card_id):
+	def post_resident(self,staff_id,name,number,room_number,going_to_alone,card_id):
 	    try:
-		    
 		    if auth_array == []:
 			    auth_array.append(staff_id)
-		    elif staff_id in SwitchView.auth_array:
+		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    self.url_after_create = 'no url'
 		    now = datetime.datetime.now()
@@ -422,8 +428,12 @@ class SwitchView(object):
 		    self.url_after_create = request.host_url + '/' + str(staff_id) + '/create'
 	    print(self.url_after_create)
 	
-	def post_update_resident(self,resident_id,name,number,room_number,going_to_alone,card_id):
+	def post_update_resident(self,staff_id,resident_id,name,number,room_number,going_to_alone,card_id):
 	    try:
+		    if auth_array == []:
+			    auth_array.append(staff_id)
+		    elif staff_id not in auth_array:
+			    return redirect(url_for('sign_in'))
 		    self.url_after_update = 'no url'
 		    now = datetime.datetime.now()
 		    day = str(now)[0:11]
@@ -502,9 +512,11 @@ class SwitchView(object):
 		    else:
 			    url_after = 'no url'
 		    
+	    except UnboundLocalError:
+		    login_staff = SwitchView.serch_staff(staff_id)
 	    except MySQLdb.OperationalError as e:
 		    print(e)
-
+	    
 	    return render_template('update.html',staff_id=staff_id,login_staff=login_staff,residents=residents,url_after_update=url_after)
     
     
