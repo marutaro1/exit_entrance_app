@@ -30,7 +30,7 @@ class MyCardReader(object):
     def __init__(self):
             self.idm_data = ''
             #self.card_type = input('go or return')
-            self.card_type = 'return'
+            self.card_type = 'go'
             self.now_format = ''
             self.last_time = datetime.datetime.now()
             self.error_judgment = ''
