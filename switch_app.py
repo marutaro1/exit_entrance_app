@@ -452,11 +452,11 @@ class SwitchView(object):
 	def kill_db_use():
 		# 停止したいプロセス名を指定する
 		process_name = "db_use.py"
-		os.system(f'pkill -f {process_name}')
+		os.system(f'sudo pkill -f {process_name}')
 	
 	def restart_db_use():
 		process_name = "db_use.py"
-		process = subprocess.Popen(["python3", process_name])
+		process = subprocess.Popen(["sudo", "python3", process_name])
 		
 
 	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
