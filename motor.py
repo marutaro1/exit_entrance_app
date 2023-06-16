@@ -1,4 +1,3 @@
-
 import time
 import RPi.GPIO as GPIO
 
@@ -15,13 +14,17 @@ class ServoMotor:
 
     def move_to_position(self, degree):
         # Duty Cycle 0%
-        self.p.start(0.0)
+        self.p.start(2.5)
 
-        # -90°の位置へ移動
-        self.p.ChangeDutyCycle(9.0)
+        # サーボモータを指定の角度に移動するための処理
+        duty_cycle = ((degree - 0) * (12.5 - 2.5) / (180 - 0)) + 2.5
+        self.p.ChangeDutyCycle(duty_cycle)
         time.sleep(1.0)
-        #-90°の位置へ移動
+        
+        # 元の位置（0度）に戻す
         self.p.ChangeDutyCycle(2.5)
+        time.sleep(1.0)
 
 motor = ServoMotor()
-motor.move_to_position(30)
+motor.move_to_position(90)
+
