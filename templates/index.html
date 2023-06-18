@@ -34,7 +34,7 @@
         </button>
       </div>
       <div class="search-container">
-        <form method="POST">
+        <form method="POST" id="post_record">
         <div class="input-container">
           <select class="input-field" name="go_out">
             <option value="go">出発</option>
@@ -85,14 +85,14 @@
         {{ pagination.links }}
   <script>
     
-    var today = new Date();
-    var flask_day = new Date({{day_value|tojson}});
+    let today = new Date();
+    let flask_day = new Date({{day_value|tojson}});
     
     function make_day(day) {
       day.setDate(day.getDate());
-      var yyyy = day.getFullYear();
-      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
-      var dd = ('0' + day.getDate()).slice(-2);
+      let yyyy = day.getFullYear();
+      let mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      let dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
     
@@ -110,11 +110,11 @@
       document.getElementById('flask_day').value = make_day(today)
     }
     
-    var page_value = document.getElementById('flask_day').value
-    var resident_id = document.getElementById('resident_id').value
-    var return_check = document.getElementById('return_check').value
+    let page_value = document.getElementById('flask_day').value
+    let resident_id = document.getElementById('resident_id').value
+    let return_check = document.getElementById('return_check').value
+    
     function search_record() {
-      
       window.addEventListener('beforeunload', function(event) {
         fetch('/' + {{staff_id|tojson}} + '/sign_out', {
         method: 'POST', // リクエストメソッド
@@ -136,6 +136,33 @@
       
       window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/'+ document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
     }
+    
+    const submitButton = document.querySelector("button[type='submit']");
+    submitButton.addEventListener("click", function(event) {
+      console.log('click')
+      event.preventDefault();
+      let form = document.getElementById('post_record');
+      console.log(form);
+      
+      form.submit();
+      
+      fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+        method: 'POST', // リクエストメソッド
+        headers: {
+          'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+        },
+        body: JSON.stringify('POST RECORD') // リクエストボディにデータをJSON形式で指定
+        })
+        .then(response => response.json()) // レスポンスをJSON形式で解析
+        .then(data => {
+          // レスポンスデータを処理
+          console.log(data);
+        })
+        .catch(error => {
+          // エラーハンドリング
+          console.error('Error:', error);
+      });
+    });
     
     // ページネーションリンクをクリックした時の処理
     document.addEventListener('click', function(event) {
