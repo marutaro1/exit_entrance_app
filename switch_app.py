@@ -108,6 +108,7 @@ class SwitchView(object):
 				    print('staff_id')
 				    print(auth_staff[0])
 				    auth_array.append(auth_staff[0])
+				    print('sign in auth_array')
 				    print(auth_array)
 				    return redirect(url_for('return_view',staff_id=auth_staff[0],login_staff=login_staff,page_value=day,resident_id='-1',return_check='all_record'))
 			    else:
@@ -126,7 +127,12 @@ class SwitchView(object):
 		    print(auth_array)
 		    print(staff_id not in auth_array)
 		    login_staff = SwitchView.serch_staff(staff_id)
-		    if auth_array == []:
+		    if auth_array == [] and request.method == 'GET':
+			    print('copy url')
+			    print('staff id')
+			    print(auth_array)
+			    return redirect(url_for('sign_in'))
+		    elif auth_array == []:
 			    auth_array.append(staff_id)
 		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
@@ -357,7 +363,12 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/<string:page_value>/<string:resident_id>/<string:return_check>', methods=['GET','POST'])
 	def return_view(staff_id,page_value,resident_id,return_check):
 	    try:
-		    if auth_array == []:
+		    if auth_array == [] and request.method == 'GET':
+			    print('copy url')
+			    print('staff id')
+			    print(auth_array)
+			    return redirect(url_for('sign_in'))
+		    elif auth_array == []:
 			    auth_array.append(staff_id)
 		    elif int(staff_id) not in auth_array:
 			    return redirect(url_for('sign_in'))
@@ -430,7 +441,12 @@ class SwitchView(object):
 	
 	def post_update_resident(self,staff_id,resident_id,name,number,room_number,going_to_alone,card_id):
 	    try:
-		    if auth_array == []:
+		    if auth_array == [] and request.method == 'GET':
+			    print('copy url')
+			    print('staff id')
+			    print(auth_array)
+			    return redirect(url_for('sign_in'))
+		    elif auth_array == []:
 			    auth_array.append(staff_id)
 		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
@@ -452,17 +468,22 @@ class SwitchView(object):
 	def kill_db_use():
 		# 停止したいプロセス名を指定する
 		process_name = "db_use.py"
-		os.system(f'sudo pkill -f {process_name}')
+		os.system(f'pkill -f {process_name}')
 	
+	#変更後
 	def restart_db_use():
-		process_name = "db_use.py"
-		process = subprocess.Popen(["sudo", "python3", process_name])
-		
+		process_name = "/var/www/html/db_use.py"
+		process = subprocess.Popen(["python3", process_name])
 
 	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
 	def new_resident_create(staff_id):
 	    try:
-		    if auth_array == []:
+		    if auth_array == [] and request.method == 'GET':
+			    print('copy url')
+			    print('staff id')
+			    print(auth_array)
+			    return redirect(url_for('sign_in'))
+		    elif auth_array == []:
 			    auth_array.append(staff_id)
 		    elif staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
@@ -530,24 +551,39 @@ class SwitchView(object):
 			    print(post_data)
 			    print('auth_array')
 			    print(auth_array)
-			    if len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
-				    print('1')
+			    if 'serch_record' in post_data:
+				    print('type:serch record')
+				    print(staff_id in auth_array)
+				    if staff_id not in auth_array:
+					    auth_array.append(staff_id)
+				    post_data.clear()
+				    print(auth_array)
+				    print(post_data)
+			    elif 'POST RECORD' in post_data and isinstance(post_data[1], int) or 'POST RECORD' in post_data and isinstance(post_data[2], int):
+				    print('type:post record')
+				    post_data.clear()
+			    elif len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
+				    print('type:1')
 				    auth_array.remove(post_data[0])
 				    post_data.clear()
 			    elif len(post_data) >= 2 and isinstance(post_data[0], str):
-				    print('2')
+				    print('type:2')
+				    print(auth_array)
 				    post_data.clear()
 			    elif len(post_data) >= 2:
-				    print('3')
+				    print('type:3')
 				    post_data.clear()
 			    elif isinstance(post_data[0], int):
-				    print('4')
+				    print('type:4')
+				    print(auth_array)
 				    auth_array.remove(int(staff_id))
+				    print('remove auth_array')
+				    print(auth_array)
 				    post_data.clear()
 			    print(post_data)
 			    return 'page change'
-		    print(auth_array)
-		    auth_array.remove(int(staff_id))
+		    print('auth_array last')
+		    #auth_array.remove(int(staff_id))
 		    print(auth_array)
 	    except  ValueError:
 		    return redirect(url_for('sign_in'))
