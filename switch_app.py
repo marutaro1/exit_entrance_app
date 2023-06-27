@@ -39,12 +39,13 @@ json_data = {
 
 
 #db接続
+#修正後のコード
 connection = MySQLdb.connect(
-	host=os.environ['CONTAINER_ID'],
-	user=os.environ['DB_USER'],
-	password=os.environ['DB_PASS'],
-	db=os.environ['DB_NAME'],
-	charset='utf8',
+host='172.18.0.2',
+user='root',
+password='mypassword',
+db='exit_entrance_management',
+charset='utf8',
 )
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
@@ -418,9 +419,7 @@ class SwitchView(object):
 	
 	def post_resident(self,staff_id,name,number,room_number,going_to_alone,card_id):
 	    try:
-		    if auth_array == []:
-			    auth_array.append(staff_id)
-		    elif staff_id not in auth_array:
+		    if staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    self.url_after_create = 'no url'
 		    now = datetime.datetime.now()
@@ -468,7 +467,8 @@ class SwitchView(object):
 	def kill_db_use():
 		# 停止したいプロセス名を指定する
 		process_name = "db_use.py"
-		os.system(f'sudo pkill -f {process_name}')
+		print('kill db_use')
+		os.system(f'pkill -f {process_name}')
 	
 	#変更後
 	def restart_db_use():
@@ -478,14 +478,8 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
 	def new_resident_create(staff_id):
 	    try:
-		    if auth_array == [] and request.method == 'GET':
-			    print('copy url')
-			    print('staff id')
-			    print(auth_array)
-			    return redirect(url_for('sign_in'))
-		    elif auth_array == []:
-			    auth_array.append(staff_id)
-		    elif staff_id not in auth_array:
+		    
+		    if staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    url_after='no url'
 		    print(request.method)
@@ -508,15 +502,15 @@ class SwitchView(object):
 	@app.route('/<int:staff_id>/update', methods=['GET','POST'])
 	def resident_update(staff_id):
 	    try:
-		    if auth_array == []:
-			    auth_array.append(staff_id)
-		    elif staff_id not in auth_array:
+		    
+		    if staff_id not in auth_array:
 			    return redirect(url_for('sign_in'))
 		    residents = SwitchView.all_residents()
 		    login_staff = SwitchView.serch_staff(staff_id)
 		    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['name'] != '':
 			    if request.form['card_id'] == 'change':
 				    SwitchView.kill_db_use()
+				    print('no db_use')
 				    cr.card_data()
 				    card_id = cr.idm_data
 				    SwitchView.post_update_resident(SwitchView,staff_id,request.form['select_resident_id'],request.form['name'],request.form['number'],request.form['room_number'],request.form['going_to_alone'],cr.idm_data)
@@ -551,36 +545,18 @@ class SwitchView(object):
 			    print(post_data)
 			    print('auth_array')
 			    print(auth_array)
-			    if 'serch_record' in post_data:
-				    print('type:serch record')
-				    print(staff_id in auth_array)
-				    if staff_id not in auth_array:
-					    auth_array.append(staff_id)
+			    if len(post_data) >= 2:
 				    post_data.clear()
-				    print(auth_array)
-				    print(post_data)
-			    elif 'POST RECORD' in post_data and isinstance(post_data[1], int) or 'POST RECORD' in post_data and isinstance(post_data[2], int):
-				    print('type:post record')
-				    post_data.clear()
-			    elif len(post_data) >= 2 and isinstance(post_data[1], int) and isinstance(post_data[0], int):
-				    print('type:1')
-				    auth_array.remove(post_data[0])
-				    post_data.clear()
-			    elif len(post_data) >= 2 and isinstance(post_data[0], str):
-				    print('type:2')
-				    print(auth_array)
-				    post_data.clear()
-			    elif len(post_data) >= 2:
-				    print('type:3')
-				    post_data.clear()
-			    elif isinstance(post_data[0], int):
-				    print('type:4')
-				    print(auth_array)
-				    auth_array.remove(int(staff_id))
-				    print('remove auth_array')
-				    print(auth_array)
-				    post_data.clear()
+			    if 'クローズ' in post_data:
+				    print('クローズ')
+				    auth_array.remove(staff_id)
+			    elif 'ログアウト' in post_data:
+				    print('ログアウト')
+				    auth_array.remove(staff_id)
+			    print('post_data')
 			    print(post_data)
+			    print('auth_array')
+			    print(auth_array)
 			    return 'page change'
 		    print('auth_array last')
 		    #auth_array.remove(int(staff_id))
