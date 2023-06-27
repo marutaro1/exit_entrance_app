@@ -121,7 +121,7 @@
         headers: {
           'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
         },
-        body: JSON.stringify('serch_record') // リクエストボディにデータをJSON形式で指定
+        body: JSON.stringify('検索') // リクエストボディにデータをJSON形式で指定
         })
         .then(response => response.json()) // レスポンスをJSON形式で解析
         .then(data => {
@@ -137,60 +137,7 @@
       window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/'+ document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
     }
     
-    const submitButton = document.querySelector("button[type='submit']");
-    submitButton.addEventListener("click", function(event) {
-      console.log('click')
-      event.preventDefault();
-      let form = document.getElementById('post_record');
-      console.log(form);
-      
-      form.submit();
-      
-      fetch('/' + {{staff_id|tojson}} + '/sign_out', {
-        method: 'POST', // リクエストメソッド
-        headers: {
-          'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
-        },
-        body: JSON.stringify('POST RECORD') // リクエストボディにデータをJSON形式で指定
-        })
-        .then(response => response.json()) // レスポンスをJSON形式で解析
-        .then(data => {
-          // レスポンスデータを処理
-          console.log(data);
-        })
-        .catch(error => {
-          // エラーハンドリング
-          console.error('Error:', error);
-      });
-    });
-    
-    // ページネーションリンクをクリックした時の処理
-    document.addEventListener('click', function(event) {
-      console.log(event.target.parentNode.tagName)
-      console.log(event.target.parentNode.tagName === 'LI')
-      // クリックされた要素がページネーションリンクであるかチェック
-      if (event.target.parentNode.tagName === 'LI') {
-        console.log('page-item')
-          fetch('/' + {{staff_id|tojson}} + '/sign_out', {
-          method: 'POST', // リクエストメソッド
-          headers: {
-            'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
-          },
-          body: JSON.stringify('page') // リクエストボディにデータをJSON形式で指定
-          })
-          .then(response => response.json()) // レスポンスをJSON形式で解析
-          .then(data => {
-            // レスポンスデータを処理
-            console.log(data);
-          })
-          .catch(error => {
-            // エラーハンドリング
-            console.error('Error:', error);
-          });
-
-      
-      }
-    });
+   
 
     
   </script>
