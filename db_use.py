@@ -74,7 +74,7 @@ class SwitchDB(object):
 		    return
 	    url = "https://slack.com/api/chat.postMessage"
 	    data = {
-	    "token":'xoxb-4610993849044-4611014137156-2pTJZhzzP48hBDYARzOyvYf7',
+	    "token":os.environ['TOKEN']
 	    "channel":"exitresident",
 	    "text":"%s %s %s様: %s" % (day,time,name,nb)
 	    }
