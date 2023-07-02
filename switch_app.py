@@ -39,14 +39,13 @@ json_data = {
 
 
 #db接続
-#修正後のコード
 connection = MySQLdb.connect(
-host='172.18.0.2',
-user='root',
-password='mypassword',
-db='exit_entrance_management',
-charset='utf8',
-)
+	host=os.environ['CONTAINER_ID'],
+	user=os.environ['DB_USER'],
+	password=os.environ['DB_PASS'],
+	db=os.environ['DB_NAME'],
+	charset='utf8'
+	)
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
