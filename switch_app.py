@@ -471,7 +471,7 @@ class SwitchView(object):
 	
 	#変更後
 	def restart_db_use():
-		process_name = "/var/www/html/db_use.py"
+		process_name = "db_use.py"
 		process = subprocess.Popen(["python3", process_name])
 
 	@app.route('/<int:staff_id>/create', methods=['GET','POST'])
