@@ -467,7 +467,7 @@ class SwitchView(object):
 		# 停止したいプロセス名を指定する
 		process_name = "db_use.py"
 		print('kill db_use')
-		os.system(f'pkill -f {process_name}')
+		os.system(f'sudo pkill -f {process_name}')
 	
 	#変更後
 	def restart_db_use():
