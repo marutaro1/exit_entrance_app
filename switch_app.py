@@ -544,21 +544,23 @@ class SwitchView(object):
 			    print(post_data)
 			    print('auth_array')
 			    print(auth_array)
-			    if len(post_data) >= 2:
-				    post_data.clear()
 			    if 'クローズ' in post_data:
 				    print('クローズ')
 				    auth_array.remove(staff_id)
+				    post_data.clear()
 			    elif 'ログアウト' in post_data:
 				    print('ログアウト')
 				    auth_array.remove(staff_id)
-			    print('post_data')
+				    post_data.clear()
+			　　　　　　　　elif len(post_data) >= 2:
+				    post_data.clear()
+			　　　　　　　　print('post_data')
 			    print(post_data)
 			    print('auth_array')
 			    print(auth_array)
 			    return 'page change'
 		    print('auth_array last')
-		    #auth_array.remove(int(staff_id))
+		    auth_array.remove(int(staff_id))
 		    print(auth_array)
 	    except  ValueError:
 		    return redirect(url_for('sign_in'))
