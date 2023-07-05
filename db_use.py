@@ -72,11 +72,16 @@ class SwitchDB(object):
 	    if cr.error_judgment == 'error':
 		    print('network error')
 		    return
+	    open_type = ''
+	    if cr.card_type == 'go':
+		    open_type = '外出'
+	    elif car.card_type == 'return':
+		    open_type = '帰館'
 	    url = "https://slack.com/api/chat.postMessage"
 	    data = {
 	    "token":os.environ['TOKEN']
 	    "channel":"exitresident",
-	    "text":"%s %s %s様: %s" % (day,time,name,nb)
+	    "text":"%s %s %s様(%s): %s" % (day,time,name,nb,open_type)
 	    }
 	    requests.post(url,data=data)
 	
