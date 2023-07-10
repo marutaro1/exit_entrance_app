@@ -308,14 +308,14 @@
 	{% block content %}{% endblock %}
   </div>
 <script>
-    let day = new Date();
+    var day = new Date();
     
     
     function make_day(day) {
       day.setDate(day.getDate());
-      let yyyy = day.getFullYear();
-      let mm = ('0' + (day.getMonth() + 1)).slice(-2);
-      let dd = ('0' + day.getDate()).slice(-2);
+      var yyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
     page_value = make_day(day)
