@@ -54,7 +54,7 @@
           <span class="input-highlight"></span>
         </div>
         <div class="input-container">
-          <select class="input-field" name="select_resident_id" placeholder="名前">
+          <select class="input-field" name="select_resident_id" placeholder="名前" required>
             <option>氏名を選択</option>
             {% for resident in residents %}
             <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
@@ -85,14 +85,14 @@
         {{ pagination.links }}
   <script>
     
-    let today = new Date();
-    let flask_day = new Date({{day_value|tojson}});
+    var today = new Date();
+    var flask_day = new Date({{day_value|tojson}});
     
     function make_day(day) {
-      day.setDate(day.getDate());
-      let yyyy = day.getFullYear();
-      let mm = ('0' + (day.getMonth() + 1)).slice(-2);
-      let dd = ('0' + day.getDate()).slice(-2);
+      day.setDate(day.getDate())
+      varyyyy = day.getFullYear();
+      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      var dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
     
@@ -110,9 +110,9 @@
       document.getElementById('flask_day').value = make_day(today)
     }
     
-    let page_value = document.getElementById('flask_day').value
-    let resident_id = document.getElementById('resident_id').value
-    let return_check = document.getElementById('return_check').value
+    var page_value = document.getElementById('flask_day').value
+    var resident_id = document.getElementById('resident_id').value
+    var return_check = document.getElementById('return_check').value
     
     function search_record() {
       window.addEventListener('beforeunload', function(event) {
