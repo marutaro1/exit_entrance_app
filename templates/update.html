@@ -15,6 +15,7 @@
 </div>
 <button onclick="serch_resident()">検索</button>
 <form id="myForm" method="POST" sction="/update">
+	<input type="hidden" id="update_message" name="update_message" value="update_message">
 	<input type="hidden" id="select_resident_id" name="select_resident_id" value="">
         <div class="input-container">
           <input class="input-field" type="text" id="name" name="name" placeholder="氏名" required='required'>
@@ -97,6 +98,23 @@
 	  document.getElementById('room_number').value = room_number
 	  document.getElementById('going_to_alone').value = going_to_alone
 	  select_card_id.append(card_id)
+	  
+	  fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+	    method: 'POST', // リクエストメソッド
+	    headers: {
+	      'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+	    },
+	    body: JSON.stringify('serch_resident') // リクエストボディにデータをJSON形式で指定
+	    })
+	    .then(response => response.json()) // レスポンスをJSON形式で解析
+	    .then(data => {
+	      // レスポンスデータを処理
+	      console.log(data);
+	    })
+	    .catch(error => {
+	      // エラーハンドリング
+	      console.error('Error:', error);
+        });
 	}
 	
 	function post_update_form() {
