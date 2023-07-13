@@ -114,6 +114,7 @@ class SwitchView(object):
 				    print('staff_id')
 				    print(auth_staff[0])
 				    auth_array.append(auth_staff[0])
+				    post_data.append('更新')
 				    print('sign in auth_array')
 				    print(auth_array)
 				    return redirect(url_for('return_view',staff_id=auth_staff[0],login_staff=login_staff,page_value=day,resident_id='-1',return_check='all_record'))
@@ -507,7 +508,7 @@ def kill_db_use():
 
 #変更後
 def restart_db_use():
-	process_name = "db_use.py"
+	process_name = db_use.py"
 	process = subprocess.Popen(["python3", process_name])
 
 @app.route('/<int:staff_id>/create', methods=['GET','POST'])
@@ -519,6 +520,10 @@ def new_resident_create(staff_id):
 	    url_after='no url'
 	    print(request.method)
 	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['new_name'] != '':
+		    if request.form['create_message']:
+			    print(request.form['create_message'])
+
+			    post_data.append(request.form['create_message'])
 		    kill_db_use()
 		    print(cr.card_data())
 		    print(cr.idm_data)
@@ -545,6 +550,10 @@ def resident_update(staff_id):
 	    residents = SwitchView.all_residents()
 	    login_staff = SwitchView.serch_staff(staff_id)
 	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['name'] != '':
+		    if request.form['update_message']:
+			    print(request.form['update_message'])
+
+			    post_data.append(request.form['update_message'])
 		    if request.form['card_id'] == 'change':
 			    kill_db_use()
 			    print('no db_use')
@@ -577,24 +586,100 @@ def resident_update(staff_id):
 @app.route('/<int:staff_id>/sign_out', methods=['GET','POST'])
 def sign_out(staff_id):
     try:
+	    pc_info = platform.platform()
+	    print(pc_info)
+	    user_agent = request.headers.get('User-Agent')
+	    print(user_agent)
+	    print(request.method == 'POST')
 	    if request.method == 'POST':
+		    print('POST')
 		    data = request.get_json()
 		    post_data.append(data)
 		    print('post_data')
 		    print(post_data)
 		    print('auth_array')
 		    print(auth_array)
-		    if 'クローズ' in post_data:
-			    print('クローズ')
-			    auth_array.remove(staff_id)
-			    post_data.clear()
-		    elif 'ログアウト' in post_data:
-			    print('ログアウト')
-			    auth_array.remove(staff_id)
-			    post_data.clear()
-		    elif len(post_data) >= 2:
-			    post_data.clear()
-			    print('post_data')
+		    page_list = ['index','create','update','sign_up','検索','page','update_message']
+		    result = any(item in page_list for item in post_data)
+		    print('result /' + str(result))
+		    if user_agent == 'Mozilla/5.0 (X11; CrOS aarch64 13597.84.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.95 Safari/537.36':
+			    if 'ログアウト' in post_data:
+				    print('ログアウト')
+				    post_data.clear()
+				    auth_array.remove(staff_id)
+			    elif post_data == ['クローズ','更新','更新']:
+				    print('error post_data')
+				    post_data.clear()
+				    print(auth_array)
+				    print(post_data)
+			    elif 'クローズ' in post_data:
+				    print('close')
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+				    print(post_data)
+			    elif post_data == ['update_message','更新'] or post_data == ['create_message','更新']:
+				    #post_dataに'更新'が入った状態でresidentのcreateかupdateを行うと、
+				    #更新後に['○○_message','更新']の形になる。
+				    #この形でページを移動すると['○○_message','更新','ページ名']['ページ移動']になってしまい
+				    #auth_arrayからstaff_idが外れてしまうため
+				    post_data.clear()
+				    print(post_data)
+			   
+			    elif len(post_data) == 1 and 'ページ移動' in post_data:
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+				    print('page data clear')
+			    elif len(post_data) == 1 and post_data == ['検索']:
+				    auth_array.append(staff_id)
+				    post_data.clear()
+				    print('serch only')
+			    
+			    elif 'serch_resident' in post_data and 'ページ移動' in post_data  and '更新' in post_data and result:
+				    #updateでserchのみ行いページ移動した場合②
+				    print('update serch only next')
+				    post_data.clear()
+			    elif 'serch_resident' in post_data and '更新' in post_data and result:
+				    #updateでserchのみ行いページ移動した場合①
+				    print('update serch only')
+			    elif len(post_data) == 3 and 'serch_resident' in post_data and 'ページ移動' in post_data  and '更新' in post_data:
+				    #updaete時
+				    post_data.clear()
+			    elif len(post_data) >= 3 and 'serch_resident' in post_data and 'ページ移動' in post_data and result == False:
+				    print(result)
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+				    print('serch_resident no serch close')
+
+			    elif len(post_data) >= 3 or post_data == ['更新','更新']:
+				    post_data.clear()
+				    print('post_data clear')
+			    elif post_data == ['更新','ページ移動']:
+				    #post_dataに'更新'が入った状態でウィンドウを閉じる
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+				    
+			    elif len(post_data) == 1 and result:
+				    auth_array.append(staff_id)
+				    post_data.clear()
+		    elif user_agent != 'Mozilla/5.0 (X11; CrOS aarch64 13597.84.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.95 Safari/537.36':
+			    
+			    if 'ログアウト' in post_data:
+				    print('ログアウト')
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+			    
+			    elif len(post_data) >= 4 and result == True:
+				    post_data.clear()
+				    print('post_data')
+			    elif len(post_data) < 4 and result == False and 'ページ移動' in post_data and 'クローズ' in post_data and '検索' not in post_data :
+				    print('クローズ')
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+			    elif len(post_data) > 4 and result == False:
+				    print('close')
+				    auth_array.remove(staff_id)
+				    post_data.clear()
+			    
 		    print(post_data)
 		    print('auth_array')
 		    print(auth_array)
@@ -609,4 +694,3 @@ def sign_out(staff_id):
 	
 if __name__ == "__main__":
     app.run(port = 8000, debug=True)
-
