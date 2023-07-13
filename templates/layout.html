@@ -308,14 +308,14 @@
 	{% block content %}{% endblock %}
   </div>
 <script>
-    var day = new Date();
+    let day = new Date();
     
     
     function make_day(day) {
       day.setDate(day.getDate());
-      var yyyy = day.getFullYear();
-      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
-      var dd = ('0' + day.getDate()).slice(-2);
+      let yyyy = day.getFullYear();
+      let mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      let dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
     page_value = make_day(day)
@@ -328,37 +328,40 @@
 			window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/sign_out'
 	}
     function index_url() {
-			
+			sendData('index')
 			window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/' + page_value + '/-1/all_record'
 	}
 	function create_url() {
-			
+			sendData('create')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/create'
 	}
 	function update_url() {
-			
+			sendData('update')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/update'
 	}
 	function signup_url() {
-			
+			sendData('sign_up')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/sign_up'
 			
 	}
 	window.addEventListener('beforeunload', function(event) {
+	  console.log('ページ移動')
 	  sendData('ページ移動')
 	});
 	
 	window.addEventListener('load', function(event) {
+	  console.log('更新')
 	  sendData('更新')
 	});
 	window.addEventListener('unload', function(event) {
+	  console.log('クローズ')
 	  sendData('クローズ')
 	});
 	
     function sendData(status) {
-      const data = status;
-
+      var data = status;
       fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+      //fetch('/' + {{staff_id|tojson}} + '/sign_out', {
         method: 'POST',
          headers: {
           'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
