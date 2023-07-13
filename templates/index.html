@@ -55,7 +55,7 @@
         </div>
         <div class="input-container">
           <select class="input-field" name="select_resident_id" placeholder="名前" required>
-            <option>氏名を選択</option>
+            <option value=''>氏名を選択</option>
             {% for resident in residents %}
             <option value="{{ resident[0] }}{{ resident[4] }}">{{ resident[1] }}:{{ resident[0] }}</option>
             {% endfor %}
@@ -73,11 +73,6 @@
         <div class="entry">
               <h2>{{ day_record[0] }}: {{ day_record[5] }}</h2>
               <p> 外出時間:{{ day_record[1] }} {{ day_record[2] }}    帰館時間:{{ day_record[3] }} {{ day_record[4] }}</p>
-	      {% if day_record[6] == 'no' %}
-	      <p>ネットワーク:安定</p>
-	      {% elif day_record[6] == 'error' %}
-	      <p>ネットワーク:不安定</p>
-	      {% endif %}
               <hr>
         </div>
         {% endfor %}
@@ -85,14 +80,14 @@
         {{ pagination.links }}
   <script>
     
-    var today = new Date();
-    var flask_day = new Date({{day_value|tojson}});
+    let today = new Date();
+    let flask_day = new Date({{day_value|tojson}});
     
     function make_day(day) {
-      day.setDate(day.getDate())
-      varyyyy = day.getFullYear();
-      var mm = ('0' + (day.getMonth() + 1)).slice(-2);
-      var dd = ('0' + day.getDate()).slice(-2);
+      day.setDate(day.getDate());
+      let yyyy = day.getFullYear();
+      let mm = ('0' + (day.getMonth() + 1)).slice(-2);
+      let dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
     }
     
@@ -109,6 +104,8 @@
     if(!document.getElementById('flask_day').value) {
       document.getElementById('flask_day').value = make_day(today)
     }
+    
+    
     
     var page_value = document.getElementById('flask_day').value
     var resident_id = document.getElementById('resident_id').value
@@ -136,8 +133,47 @@
       
       window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/'+ document.getElementById('flask_day').value + '/' + document.getElementById('resident_id').value + '/' + document.getElementById('return_check').value
     }
+    var li_btn = document.getElementsByTagName('li');
+    var active_page = document.getElementsByClassName('active');
+    var disabled_btn = document.getElementsByClassName('disabled');
     
-   
+    Array.from(li_btn).forEach(function(li,index) {
+      li.id = (index);
+    });
+      
+    for(var i = 0; i < li_btn.length; i++) {
+        li_btn[i].addEventListener('click', function(event) {
+          page_record(event,active_page[0].id)
+        });
+    };
+    var page_len = li_btn.length - 2
+    console.log('disabled class ')
+    console.log(disabled_btn[0] != li_btn[0])
+    li_btn[0].parentNode.removeChild(li_btn[0])
+    if (li_btn.length >= 2) {
+      console.log(li_btn[page_len])
+      li_btn[page_len].parentNode.removeChild(li_btn[page_len])
+    }
+    
+    function page_record(event,page) {
+        
+        fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+        method: 'POST', // リクエストメソッド
+        headers: {
+          'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+        },
+        body: JSON.stringify('page') // リクエストボディにデータをJSON形式で指定
+        })
+        .then(response => response.json()) // レスポンスをJSON形式で解析
+        .then(data => {
+          // レスポンスデータを処理
+          console.log(data);
+        })
+        .catch(error => {
+          // エラーハンドリング
+          console.error('Error:', error);
+        });
+      }
 
     
   </script>
