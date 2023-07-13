@@ -3,7 +3,9 @@
 {% block content %}
 <div class="create-container">
 <h2>新規利用者登録</h2>
+<div class="input-container">
 <form onSubmit="" method="POST">
+	<input type="hidden" id="create_message" name="create_message" value="create_message">
         <div class="input-container">
           <input class="input-field" type="text" id="new_name" name="new_name" placeholder="氏名" required='required'>
           <label for="input-field" class="input-label">氏名</label>
@@ -48,16 +50,44 @@
       var mm = ('0' + (day.getMonth() + 1)).slice(-2);
       var dd = ('0' + day.getDate()).slice(-2);
       return yyyy + '-' + mm + '-' + dd;
-    }
+      
+      }
+      
+      var resident_number = document.getElementById('resident_number')
+      for(var floor = 3; floor <= 10; floor++) {
+	var option = document.createElement('option');
+	console.log(floor);
+	console.log(option);
+	option.value = floor;
+	option.textcontent = floor + 'F';
+	resident_number.appendChild(option);
+      }
     
 	page_value = make_day(today)
 	console.log({{url_after_create|tojson}})
 	function post_create_form() {
-			if(document.getElementById('new_name').value == '' || document.getElementById('new_number').value == '' || document.getElementById('new_room_number').value == '' || document.getElementById('new_going_to_alone').value == '') {
-			alert('空欄があります')
-			return 
+		if(document.getElementById('new_name').value == '' || document.getElementById('new_number').value == '' || document.getElementById('new_room_number').value == '' || document.getElementById('new_going_to_alone').value == '') {
+		  alert('空欄があります')
+		  return 
 		}
 		alert('カードをかざしてください')
+		fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+
+		method: 'POST',
+		 headers: {
+		  'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+		},
+		body: JSON.stringify('登録') // リクエストボディにデータをJSON形式で指定
+		})
+		.then(response => response.json()) // レスポンスをJSON形式で解析
+		.then(data => {
+		  // レスポンスデータを処理
+		  console.log(data);
+		})
+		.catch(error => {
+		  // エラーハンドリング
+		  console.error('Error:', error);
+	      });
 	}
 	if({{url_after_create|tojson}} != 'no url') {
 		alert('利用者を新規登録しました')
