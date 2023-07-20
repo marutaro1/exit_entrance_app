@@ -51,14 +51,14 @@ cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
 states = ['go', 'return','go_record','return_record','post_go_record','post_return_record']
-trigger_name = 'return'
+
 transitions = [
 	{'trigger': 'go','source':['go', 'return'], 'dest': 'go_record'},#goの信号を受け取る
 	{'trigger':'go_record','source':'go_record', 'dest':'post_go_record','after':'insert_door'},#受け取った信号を登録する
-	{'trigger': 'post_go_record', 'source':'post_go_record', 'dest': trigger_name},
+	{'trigger': 'post_go_record', 'source':'post_go_record', 'dest': 'go'},
 	{'trigger': 'return','source': ['return', 'go'], 'dest':'return_record'},#returnの信号を受け取る
 	{'trigger':'return_record','source':'return_record', 'dest':'post_return_record','after':'insert_door'},#returnの信号を受け取り、updateかpostかを識別し登録する
-	{'trigger': 'post_return_record', 'source':'post_return_record', 'dest': trigger_name}
+	{'trigger': 'post_return_record', 'source':'post_return_record', 'dest': 'return'}
 	]
 
 
