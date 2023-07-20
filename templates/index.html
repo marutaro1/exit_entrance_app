@@ -63,8 +63,9 @@
           <label for="input-field" class="input-label">氏名</label>
           <span class="input-highlight"></span>
         </div>
-        <button class="index_btn" type="submit">登録</button>
+        
       </form>
+      <button class="index_btn" type="submit" onClick="do_post()">登録</button>
       </div>
       
       <hr>
@@ -174,7 +175,35 @@
           console.error('Error:', error);
         });
       }
-
+      
+      function add_form_post_record() {
+        fetch('/' + {{staff_id|tojson}} + '/sign_out', {
+        method: 'POST', // リクエストメソッド
+        headers: {
+          'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
+        },
+        body: JSON.stringify('add_record') // リクエストボディにデータをJSON形式で指定
+        })
+        .then(response => response.json()) // レスポンスをJSON形式で解析
+        .then(data => {
+          // レスポンスデータを処理
+          console.log(data);
+        })
+        .catch(error => {
+          // エラーハンドリング
+          console.error('Error:', error);
+        });
+      }
+      
+      function do_post() {
+        var form = document.getElementById('post_record');
+        alert('a')
+        add_form_post_record();
+        alert('b')
+        form.submit();
+        alert('c')
+      }
+      
     
   </script>
   {% endblock %}
