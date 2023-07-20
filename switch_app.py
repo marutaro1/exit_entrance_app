@@ -607,150 +607,15 @@ def sign_out(staff_id):
 		    page_list = ['index','create','update','sign_up','検索','page','update_message']
 		    result = any(item in page_list for item in post_data)
 		    print('result /' + str(result))
-		    if user_agent == 'Mozilla/5.0 (X11; CrOS aarch64 13597.84.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.95 Safari/537.36':
-			    if 'ログアウト' in post_data:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:1')
-				    post_data.clear()
-				    auth_array.remove(staff_id)
-			    elif post_data == ['クローズ','更新','更新']:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:2')
-				    post_data.clear()
-				    print(auth_array)
-				    print(post_data)
-			    elif 'クローズ' in post_data and len(auth_array) == 1 and page_close[0] == False:
-				    #ウィンドウ2つ以上でログイン中、片方のウィンドウを閉じると['更新','ページ移動']['クローズ']になる
-				    #この際、['クローズ']でauth_array.remove(staff_id)とすると、先に['更新','ページ移動']でsttaf_idを削除しているため、
-				    #staff_idが見当たらずに以下にあるpost_data.clear()が発動せずに
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:3')
-				    post_data.clear()
-				    auth_array.remove(staff_id)
-				    
-				    print(post_data)
-			    elif post_data == ['update_message','更新'] or post_data == ['create_message','更新']:
-				    #post_dataに'更新'が入った状態でresidentのcreateかupdateを行うと、
-				    #更新後に['○○_message','更新']の形になる。
-				    #この形でページを移動すると['○○_message','更新','ページ名']['ページ移動']になってしまい
-				    #auth_arrayからstaff_idが外れてしまうため
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:4')
-				    post_data.clear()
-				    print(post_data)
-				    
-			   
-			    elif len(post_data) == 1 and 'ページ移動' in post_data:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:5')
-				    auth_array.remove(staff_id)
-				    post_data.clear()
-				    print(page_close)
-				    print('page data clear')
-			    elif len(post_data) == 1 and post_data == ['検索']:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:6')
-				    auth_array.append(staff_id)
-				    post_data.clear()
-				    print('serch only')
-			    
-			    elif 'serch_resident' in post_data and 'ページ移動' in post_data  and '更新' in post_data and result:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:7')
-				    #updateでserchのみ行いページ移動した場合②
-				    print('update serch only next')
-				    post_data.clear()
-			    elif 'serch_resident' in post_data and '更新' in post_data and result:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:8')
-				    #updateでserchのみ行いページ移動した場合①
-				    print('update serch only')
-			    elif len(post_data) == 3 and 'serch_resident' in post_data and 'ページ移動' in post_data  and '更新' in post_data:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:9')
-				    #updaete時
-				    post_data.clear()
-			    elif len(post_data) >= 3 and 'serch_resident' in post_data and 'ページ移動' in post_data and result == False:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:10')
-				    print(result)
-				    auth_array.remove(staff_id)
-				    post_data.clear()
-				    print('serch_resident no serch close')
-			    elif post_data == ['更新', 'ページ移動', 'クローズ']:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:16')
-				    post_data.clear()
-				    auth_array.remove(staff_id)
-			    elif len(post_data) >= 3 or post_data == ['更新','更新']:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:11')
-				    post_data.clear()
-				    print('post_data clear')
-				    print(page_close)
-			    elif post_data == ['更新','ページ移動'] and page_close == False:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:12')
-				    #post_dataに'更新'が入った状態でウィンドウを閉じる
-				    auth_array.remove(staff_id)
-				    post_data.clear()
-				    
-			    elif len(post_data) == 1 and result:
-				    page_close.clear()
-				    page_close.append(False)
-				    print('sign out:13')
-				    auth_array.append(staff_id)
-				    post_data.clear()
-			    elif post_data.count('クローズ') >= 2:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:14')
-				    post_data.clear()
-				    auth_array.clear()
-			    elif post_data == ['クローズ', 'ページ移動']:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:15')
-				    post_data.clear()
-				    auth_array.remove(staff_id)
-			    elif post_data == ['更新', 'ページ移動', 'クローズ']:
-				    page_close.clear()
-				    page_close.append(True)
-				    print('sign out:16')
-				    post_data.clear()
-				    auth_array.remove(staff_id)
-				    
-		    elif user_agent != 'Mozilla/5.0 (X11; CrOS aarch64 13597.84.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.95 Safari/537.36':
-			    
-			    if 'ログアウト' in post_data:
-				    print('ログアウト')
-				    auth_array.remove(staff_id)
-				    post_data.clear()
-			    
-			    elif len(post_data) >= 4 and result == True:
-				    post_data.clear()
-				    print('post_data')
-			    elif len(post_data) < 4 and result == False and 'ページ移動' in post_data and 'クローズ' in post_data and '検索' not in post_data :
-				    print('クローズ')
-				    auth_array.remove(staff_id)
-				    post_data.clear()
-			    elif len(post_data) > 4 and result == False:
-				    print('close')
-				    auth_array.remove(staff_id)
-				    post_data.clear()
+		    
+		    
+		    if 'ログアウト' in post_data:
+			    print('sign out:1')
+			    auth_array.remove(staff_id)
+			    post_data.clear()
+		    elif auth_array.count(staff_id) >= 2:
+			     auth_array.remove(staff_id)
+		   
 			    
 		    print(post_data)
 		    print('auth_array')
