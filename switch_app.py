@@ -64,7 +64,6 @@ transitions = [
 
 auth_array = []
 post_data = []
-page_close = [False]#['ページ移動']['クローズ']となったときにログインstaffを重複してログアウト処理させないための配列
 
 
 class SwitchView(object):
@@ -546,16 +545,20 @@ def new_resident_create(staff_id):
 @app.route('/<int:staff_id>/update', methods=['GET','POST'])
 def resident_update(staff_id):
     try:
-	    
 	    if staff_id not in auth_array:
 		    return redirect(url_for('sign_in'))
 	    residents = SwitchView.all_residents()
 	    login_staff = SwitchView.serch_staff(staff_id)
 	    if SwitchView.all_staff_id(staff_id) and request.method == 'POST' and request.form['name'] != '':
+		    print('print')
+		    print(request.url)
+		    print(request.method)
+		    print(request.form['name'])
 		    if request.form['update_message']:
 			    print(request.form['update_message'])
 
 			    post_data.append(request.form['update_message'])
+		    print('update select')
 		    if request.form['card_id'] == 'change':
 			    kill_db_use()
 			    print('no db_use')
@@ -602,15 +605,9 @@ def sign_out(staff_id):
 		    print(post_data)
 		    print('auth_array')
 		    print(auth_array)
-		    print('page_close')
-		    print(page_close)
-		    page_list = ['index','create','update','sign_up','検索','page','update_message']
-		    result = any(item in page_list for item in post_data)
-		    print('result /' + str(result))
 		    
 		    
 		    if 'ログアウト' in post_data:
-			    print('sign out:1')
 			    auth_array.remove(staff_id)
 			    post_data.clear()
 		    elif auth_array.count(staff_id) >= 2:
