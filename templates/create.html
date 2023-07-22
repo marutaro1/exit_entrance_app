@@ -52,17 +52,7 @@
       return yyyy + '-' + mm + '-' + dd;
       
       }
-      
-      var resident_number = document.getElementById('resident_number')
-      for(var floor = 3; floor <= 10; floor++) {
-	var option = document.createElement('option');
-	console.log(floor);
-	console.log(option);
-	option.value = floor;
-	option.textcontent = floor + 'F';
-	resident_number.appendChild(option);
-      }
-    
+
 	page_value = make_day(today)
 	console.log({{url_after_create|tojson}})
 	function post_create_form() {
@@ -71,23 +61,7 @@
 		  return 
 		}
 		alert('カードをかざしてください')
-		fetch('/' + {{staff_id|tojson}} + '/sign_out', {
-
-		method: 'POST',
-		 headers: {
-		  'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
-		},
-		body: JSON.stringify('登録') // リクエストボディにデータをJSON形式で指定
-		})
-		.then(response => response.json()) // レスポンスをJSON形式で解析
-		.then(data => {
-		  // レスポンスデータを処理
-		  console.log(data);
-		})
-		.catch(error => {
-		  // エラーハンドリング
-		  console.error('Error:', error);
-	      });
+		
 	}
 	if({{url_after_create|tojson}} != 'no url') {
 		alert('利用者を新規登録しました')
