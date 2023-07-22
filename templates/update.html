@@ -14,7 +14,7 @@
   <span class="input-highlight"></span>
 </div>
 <button onclick="serch_resident()">検索</button>
-<form id="myForm" method="POST" sction="/update">
+<form id="myForm" method="POST">
 	<input type="hidden" id="update_message" name="update_message" value="update_message">
 	<input type="hidden" id="select_resident_id" name="select_resident_id" value="">
         <div class="input-container">
@@ -100,8 +100,8 @@
 	  select_card_id.append(card_id)
 	  
 	  fetch('/' + {{staff_id|tojson}} + '/sign_out', {
-	    method: 'POST', // リクエストメソッド
-	    headers: {
+	    method: 'POST',
+	     headers: {
 	      'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
 	    },
 	    body: JSON.stringify('serch_resident') // リクエストボディにデータをJSON形式で指定
@@ -114,10 +114,12 @@
 	    .catch(error => {
 	      // エラーハンドリング
 	      console.error('Error:', error);
-        });
+	  }); 
+	
 	}
 	
 	function post_update_form() {
+	  
 	  const url = ''
 	  if(document.getElementById('card_id').value == '') {
 	    const result = confirm('カードIDを変更しますか？')
