@@ -290,6 +290,7 @@
 	background-color: #f2f2f2;
 	}
 	
+	
   </style>    
 </head>
 <body>
@@ -325,40 +326,39 @@
     }
     page_value = make_day(day)
     
-        function sign_out() {
-			setTimeout(() => sendData('ログアウト'), 500);
+    
+    
+    
+    function sign_out() {
+			sendData('ログアウト')
 			window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/sign_out'
 	}
     function index_url() {
-			setTimeout(() => sendData('index'), 500);
+			sendData('index')
 			window.location.href = window.location.origin + '/' + {{staff_id|tojson}} + '/' + page_value + '/-1/all_record'
 	}
 	function create_url() {
-			setTimeout(() => sendData('create'), 500);
+			sendData('create')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/create'
 	}
 	function update_url() {
-			setTimeout(() => sendData('update'), 500);
+			sendData('update')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/update'
 	}
 	function signup_url() {
-			setTimeout(() => sendData('sign_up'), 500);
+			sendData('sign_up')
 			window.location.href = window.location.origin +'/' + {{staff_id|tojson}} + '/sign_up'
 			
 	}
 	window.addEventListener('beforeunload', function(event) {
-	  setTimeout(() => sendData('ページ移動'), 500);
-	  //alert('ページ移動')
+	  sendData('ページ移動')
 	});
 	
 	window.addEventListener('load', function(event) {
-	  setTimeout(() => sendData('更新'), 500);
-	  //alert('更新')
+	  sendData('更新')
 	});
 	window.addEventListener('unload', function(event) {
-	  setTimeout(() => sendData('クローズ'), 500);
-	  
-	  //alert('クローズ')
+	  sendData('クローズ')
 	  console.log('close')
 	  event.preventDefault()
 	});
@@ -366,7 +366,8 @@
     function sendData(status) {
       var data = status;
       console.log(status)
-      fetch('http://' + '192.168.0.17' + '/' + {{staff_id|tojson}} + '/sign_out', {
+      
+      fetch('/' + {{staff_id|tojson}} + '/sign_out', {
         method: 'POST',
          headers: {
           'Content-Type': 'application/json' // リクエストヘッダーのContent-Type
@@ -382,7 +383,7 @@
           // エラーハンドリング
           console.error('Error:', error);
       });
-}
+    }
 	
 </script>
 </body>
