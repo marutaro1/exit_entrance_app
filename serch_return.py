@@ -12,12 +12,12 @@ start_time = datetime.datetime.now()
 
 #db接続
 connection = MySQLdb.connect(
-	host=os.environ['CONTAINER_ID'],
-	user=os.environ['DB_USER'],
-	password=os.environ['DB_PASS'],
-	db=os.environ['DB_NAME'],
-	charset='utf8'
-	)
+host=os.environ['CONTAINER_ID'],
+user=os.environ['DB_USER'],
+password=os.environ['DB_PASS'],
+db=os.environ['DB_NAME'],
+charset='utf8'
+)
 cursor = connection.cursor()
 cursor.execute('set global wait_timeout=86400')
 
@@ -55,10 +55,10 @@ if __name__ == "__main__":
 		time.sleep(1)
 		connection.close()
 		connection = MySQLdb.connect(
-			host=os.environ['CONTAINER_ID'],
-			user=os.environ['DB_USER'],
-			password=os.environ['DB_PASS'],
-			db=os.environ['DB_NAME'],
-			charset='utf8'
-			)
+		host=os.environ['CONTAINER_ID'],
+		user=os.environ['DB_USER'],
+		password=os.environ['DB_PASS'],
+		db=os.environ['DB_NAME'],
+		charset='utf8'
+		)
 		cursor = connection.cursor()
