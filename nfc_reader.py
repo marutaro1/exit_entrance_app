@@ -16,14 +16,21 @@ load_dotenv()
 
 
 #db接続
-connection = MySQLdb.connect(
+try:
+        connection = MySQLdb.connect(
 	host=os.environ['CONTAINER_ID'],
 	user=os.environ['DB_USER'],
 	password=os.environ['DB_PASS'],
 	db=os.environ['DB_NAME'],
 	charset='utf8'
 	)
-cursor = connection.cursor()
+        cursor = connection.cursor()
+        cursor.execute('set global wait_timeout=86400')
+except Exception as e:
+        error_ms = str(e)
+        print('error: ',error_ms)
+        time.sleep(5)
+        subprocess.call(['sudo','systemctl','restart','start_app.service'])
 
 
 class MyCardReader(object):
