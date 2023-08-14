@@ -81,7 +81,7 @@ class SwitchDB(object):
 	    open_type = ''
 	    if cr.card_type == 'go':
 		    open_type = '外出'
-	    elif car.card_type == 'return':
+	    elif cr.card_type == 'return':
 		    open_type = '帰館'
 	    url = "https://slack.com/api/chat.postMessage"
 	    data = {
