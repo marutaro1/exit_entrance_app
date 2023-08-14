@@ -596,8 +596,6 @@ def resident_update(staff_id):
 @app.route('/<int:staff_id>/sign_out', methods=['GET','POST'])
 def sign_out(staff_id):
     try:
-	    pc_info = platform.platform()
-	    print(pc_info)
 	    user_agent = request.headers.get('User-Agent')
 	    print(user_agent)
 	    print(request.method == 'POST')
