@@ -3,7 +3,7 @@ import nfc
 import os
 import sys
 import MySQLdb
-
+import subprocess
 import requests
 from dotenv import load_dotenv
 import datetime
