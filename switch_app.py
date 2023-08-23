@@ -156,11 +156,16 @@ class SwitchView(object):
 			    authority = request.form['authority']
 			    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 			    print(bcrypt.check_password_hash(hashed_password, password))
-			    
+			    kill_db_use()
+				print(cr.card_data())
+				print(cr.idm_data)
+				restart_db_use()
+
+
 			    cursor.execute('''
-				    INSERT INTO staff(name,login_id,password,authority)
-				    VALUE('%s','%s','%s',%s)
-			    ''' % (name,login_id,hashed_password,authority))
+				    INSERT INTO staff(name,login_id,password,authority,card_id)
+				    VALUE('%s','%s','%s',%s, %s)
+			    ''' % (name,login_id,hashed_password,authority,cr.idm_data))
 			    connection.commit()
 	    except UnboundLocalError:
 		    login_staff = SwitchView.serch_staff(staff_id)
