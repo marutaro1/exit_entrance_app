@@ -32,6 +32,13 @@
 </form>
 </div>
 <script>
-    
+    function post_staff_form() {
+		if(document.getElementById('name').value == '' || document.getElementById('login_id').value == '' || document.getElementById('password').value == '' || document.getElementById('authority').value == '') {
+		  alert('空欄があります')
+		  return 
+		}
+		alert('カードをかざしてください')
+		
+	}
 </script>
 {% endblock %}
